@@ -11,7 +11,7 @@ const els = {
   thresholdSlider: document.querySelector('#thresholdSlider'),
   thresholdValue: document.querySelector('#thresholdValue'),
   currentLevel: document.querySelector('#currentLevel'),
-  currentLevelBarFill: document.querySelector('#currentLevelBarFill'),
+  trackFill: document.querySelector('#trackFill'),
   messageInput: document.querySelector('#messageInput'),
   speechToggle: document.querySelector('#speechToggle'),
   beepToggle: document.querySelector('#beepToggle'),
@@ -64,22 +64,22 @@ function updateVolume(volume) {
     els.currentLevel.textContent = Math.round(volume);
   }
   
-  // Update the progress bar inside the slider
-  if (els.currentLevelBarFill) {
-    els.currentLevelBarFill.style.width = `${Math.min(100, volume)}%`;
+  // Update the progress bar in the slider track
+  if (els.trackFill) {
+    els.trackFill.style.width = `${Math.min(100, volume)}%`;
     
     // Update background color based on noise level relative to threshold
     const percentage = volume / state.threshold;
     
     if (percentage >= 1) {
       // At or above threshold - danger zone (red)
-      els.currentLevelBarFill.style.background = 'var(--red)';
+      els.trackFill.style.background = 'var(--red)';
     } else if (percentage >= 0.7) {
       // Approaching threshold - warning zone (amber)
-      els.currentLevelBarFill.style.background = 'var(--amber)';
+      els.trackFill.style.background = 'var(--amber)';
     } else {
       // Safe zone (green)
-      els.currentLevelBarFill.style.background = 'var(--green)';
+      els.trackFill.style.background = 'var(--green)';
     }
   }
 }
