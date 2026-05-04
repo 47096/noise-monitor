@@ -171,6 +171,19 @@ p {
   position: relative;
 }
 
+.waveform-chart {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 80px;
+  transform: translateY(-50%);
+  z-index: 0;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
 .slider-track-container {
   position: relative;
   height: 48px;
