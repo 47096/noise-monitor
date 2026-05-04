@@ -40,46 +40,34 @@
             <span>Start</span>
           </button>
         </footer>
-      </section>
-    </main>
 
-    <button id="hiddenTestButton" class="hidden-test-button settings-red" type="button" aria-label="Settings">
-      ⚙️
-    </button>
-
-    <!-- Settings Modal Overlay -->
-    <div id="settingsModal" class="settings-modal" hidden>
-      <div class="settings-modal-content">
-        <header class="modal-header">
-          <h2>Parent Settings</h2>
-          <button id="closeSettingsBtn" class="close-btn" type="button" aria-label="Close settings">&times;</button>
-        </header>
-        
-        <form class="modal-settings-form" onsubmit="return false;">
+        <section class="settings-inline">
+          <h2>Alert Settings</h2>
+          
           <label class="field">
             <span>Personalised Message</span>
-            <input id="modalMessageInput" type="text" value="Please keep quiet" maxlength="80" autocomplete="off" autocapitalize="sentences">
+            <input id="messageInput" type="text" value="Please keep quiet" maxlength="80" autocomplete="off" autocapitalize="sentences">
           </label>
 
           <div class="toggle-row">
             <label class="switch">
-              <input id="modalSpeechToggle" type="checkbox" checked>
+              <input id="speechToggle" type="checkbox" checked>
               <span class="switch-ui" aria-hidden="true"></span>
               <span>Speak alert</span>
             </label>
             <label class="switch">
-              <input id="modalBeepToggle" type="checkbox" checked>
+              <input id="beepToggle" type="checkbox" checked>
               <span class="switch-ui" aria-hidden="true"></span>
               <span>Beep fallback</span>
             </label>
           </div>
 
-          <button id="modalTestButton" class="primary-button" type="button">
+          <button id="testButton" class="secondary-button" type="button">
             Test Alert
           </button>
-        </form>
-      </div>
-    </div>
+        </section>
+      </section>
+    </main>
 
     <script src="./app.js" defer></script>
   </body>
