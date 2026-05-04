@@ -110,15 +110,14 @@ p {
 .readout {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 14px;
   margin-top: 34px;
 }
 
-.waveform {
-  width: 120px;
-  height: 40px;
-  flex-shrink: 0;
+#waveformCanvas {
+  width: 200px;
+  height: 60px;
 }
 
 .volume-number {
