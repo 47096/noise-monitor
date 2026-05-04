@@ -28,10 +28,10 @@
         </header>
 
         <div class="readout" aria-live="polite">
-          <div class="volume-number">
-            <span id="volumeValue">0</span>
-            <span class="unit">%</span>
-          </div>
+          <svg id="waveform" class="waveform" viewBox="0 0 120 40" aria-label="Noise waveform">
+            <rect x="0" y="0" width="120" height="40" fill="#eef2ff"/>
+            <g id="waveformBars" fill="#6366f1"></g>
+          </svg>
           <div id="statusPill" class="status-pill idle">
             <span class="status-dot" aria-hidden="true"></span>
             <span id="statusText">Ready</span>
