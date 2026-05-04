@@ -10,7 +10,6 @@ const els = {
   permissionNote: document.querySelector('#permissionNote'),
   thresholdSlider: document.querySelector('#thresholdSlider'),
   thresholdValue: document.querySelector('#thresholdValue'),
-  currentLevel: document.querySelector('#currentLevel'),
   trackFill: document.querySelector('#trackFill'),
   alertMessageInput: document.querySelector('#alertMessage'),
 };
@@ -56,11 +55,6 @@ function updateThreshold() {
 }
 
 function updateVolume(volume) {
-  // Update the current noise level display (kept for backwards compatibility, but hidden)
-  if (els.currentLevel) {
-    els.currentLevel.textContent = Math.round(volume);
-  }
-  
   // Update the progress bar in the slider track
   if (els.trackFill) {
     els.trackFill.style.width = `${Math.min(100, volume)}%`;
