@@ -11,8 +11,6 @@ const els = {
   thresholdLine: document.querySelector('#thresholdLine'),
   meterTrack: document.querySelector('#meterTrack'),
   messageInput: document.querySelector('#messageInput'),
-  speechToggle: document.querySelector('#speechToggle'),
-  beepToggle: document.querySelector('#beepToggle'),
   startButton: document.querySelector('#startButton'),
   permissionNote: document.querySelector('#permissionNote'),
   // Modal elements
@@ -151,7 +149,7 @@ function unlockSpeech() {
 }
 
 function playBeep() {
-  if (!els.beepToggle.checked || !state.audioContext || state.audioContext.state === 'closed') return;
+  if (!els.modalBeepToggle.checked || !state.audioContext || state.audioContext.state === 'closed') return;
 
   if (state.audioContext.state === 'suspended') {
     state.audioContext.resume().catch(() => {});
@@ -177,7 +175,7 @@ function speakAlert() {
   const message = els.messageInput.value.trim();
   if (!message) return;
 
-  if (!els.speechToggle.checked || !('speechSynthesis' in window)) {
+  if (!els.modalSpeechToggle.checked || !('speechSynthesis' in window)) {
     playBeep();
     return;
   }
@@ -414,12 +412,6 @@ function openSettingsModal() {
   if (els.modalMessageInput && els.messageInput) {
     els.modalMessageInput.value = els.messageInput.value;
   }
-  if (els.modalSpeechToggle && els.speechToggle) {
-    els.modalSpeechToggle.checked = els.speechToggle.checked;
-  }
-  if (els.modalBeepToggle && els.beepToggle) {
-    els.modalBeepToggle.checked = els.beepToggle.checked;
-  }
   
   // Show modal
   if (els.settingsModal) {
@@ -431,12 +423,6 @@ function closeSettingsModal() {
   // Sync modal values back to main form
   if (els.messageInput && els.modalMessageInput) {
     els.messageInput.value = els.modalMessageInput.value;
-  }
-  if (els.speechToggle && els.modalSpeechToggle) {
-    els.speechToggle.checked = els.modalSpeechToggle.checked;
-  }
-  if (els.beepToggle && els.modalBeepToggle) {
-    els.beepToggle.checked = els.modalBeepToggle.checked;
   }
   
   // Hide modal

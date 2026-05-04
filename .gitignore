@@ -4,12 +4,14 @@
 __pycache__/
 *.o
 *.obj
-*.class
 *.exe
 *.dll
 *.so
 *.a
 *.out
+dist/
+build/
+target/
 
 # Dependencies
 node_modules/
@@ -17,7 +19,7 @@ venv/
 .venv/
 .env
 .env.local
-*.env.*
+.env.*
 
 # Logs and temp files
 *.log
