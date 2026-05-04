@@ -6,14 +6,10 @@ const AppStatus = {
 };
 
 const els = {
-  waveformCanvas: document.querySelector('#waveformCanvas'),
-  volumeFill: document.querySelector('#volumeFill'),
-  thresholdLine: document.querySelector('#thresholdLine'),
-  meterTrack: document.querySelector('#meterTrack'),
   startButton: document.querySelector('#startButton'),
   permissionNote: document.querySelector('#permissionNote'),
-  // Threshold slider
   thresholdSlider: document.querySelector('#thresholdSlider'),
+  thresholdValue: document.querySelector('#thresholdValue'),
   // Modal elements
   settingsModal: document.querySelector('#settingsModal'),
   modalMessageInput: document.querySelector('#modalMessageInput'),
@@ -53,84 +49,19 @@ function showNote(message) {
 }
 
 function updateThreshold() {
-  els.thresholdLine.style.left = `${state.threshold}%`;
+  // Update the threshold value display
+  if (els.thresholdValue) {
+    els.thresholdValue.textContent = state.threshold;
+  }
   // Update the slider value
   if (els.thresholdSlider) {
     els.thresholdSlider.value = state.threshold;
   }
 }
 
-function setThresholdFromPosition(clientX) {
-  const rect = els.meterTrack.getBoundingClientRect();
-  const x = clientX - rect.left;
-  const percentage = Math.round((x / rect.width) * 100);
-  state.threshold = Math.min(100, Math.max(0, percentage));
-  updateThreshold();
-}
-
 function updateVolume(volume) {
-  const rounded = Math.round(volume);
-  
-  // Update the volume fill bar
-  els.volumeFill.style.width = `${Math.min(100, Math.max(0, volume))}%`;
-}
-
-function drawWaveform() {
-  if (!els.waveformCanvas) return;
-  
-  const canvas = els.waveformCanvas;
-  const ctx = canvas.getContext('2d');
-  
-  // Set canvas size for high DPI displays (only once, or when size changes)
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  const displayWidth = rect.width;
-  const displayHeight = rect.height;
-  
-  // Only resize if needed to avoid clearing the canvas unnecessarily
-  if (canvas.width !== Math.round(displayWidth * dpr) || canvas.height !== Math.round(displayHeight * dpr)) {
-    canvas.width = Math.round(displayWidth * dpr);
-    canvas.height = Math.round(displayHeight * dpr);
-  }
-  
-  // Reset transform before scaling to avoid accumulating scales
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.scale(dpr, dpr);
-  
-  // Clear canvas
-  ctx.clearRect(0, 0, displayWidth, displayHeight);
-  
-  // If no analyser, draw a flat line (idle state)
-  if (!state.analyser) {
-    ctx.beginPath();
-    ctx.moveTo(0, displayHeight / 2);
-    ctx.lineTo(displayWidth, displayHeight / 2);
-    ctx.strokeStyle = '#a5b4fc';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    return;
-  }
-  
-  const bufferLength = state.analyser.frequencyBinCount;
-  const dataArray = new Uint8Array(bufferLength);
-  state.analyser.getByteFrequencyData(dataArray);
-  
-  const barWidth = (displayWidth / bufferLength) * 2.5;
-  let x = 0;
-  
-  // Create gradient
-  const gradient = ctx.createLinearGradient(0, 0, 0, displayHeight);
-  gradient.addColorStop(0, '#6366f1');
-  gradient.addColorStop(1, '#a5b4fc');
-  
-  for (let i = 0; i < bufferLength; i++) {
-    const barHeight = (dataArray[i] / 255) * displayHeight;
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(x, (displayHeight - barHeight) / 2, Math.max(barWidth - 1, 1), barHeight);
-    
-    x += barWidth + 1;
-  }
+  // Volume is now monitored via the slider position
+  // This function can be used for future visual feedback if needed
 }
 
 function loadVoices() {
@@ -236,7 +167,6 @@ function analyze() {
   const nextVolume = Math.min(100, (rms / 0.16) * 100);
   state.volume = state.volume * 0.72 + nextVolume * 0.28;
 
-  updateVolume(state.volume);
   maybeAlert(state.volume);
   state.frame = requestAnimationFrame(analyze);
 }
@@ -258,7 +188,6 @@ function stopMonitoring() {
   state.volume = 0;
   state.isLoud = false;
 
-  updateVolume(0);
   setStatus(AppStatus.IDLE, 'Ready');
   els.startButton.classList.remove('stop');
   els.startButton.querySelector('.button-icon').textContent = '▶';
@@ -328,9 +257,7 @@ function handleVisibilityChange() {
   }
 }
 
-// Threshold control via meter track
-let isDragging = false;
-
+// Threshold slider event listener
 function handleSliderInput(e) {
   state.threshold = parseInt(e.target.value, 10);
   updateThreshold();
@@ -340,45 +267,6 @@ function handleSliderInput(e) {
 if (els.thresholdSlider) {
   els.thresholdSlider.addEventListener('input', handleSliderInput);
 }
-
-function handlePointerDown(e) {
-  isDragging = true;
-  els.meterTrack.setPointerCapture(e.pointerId);
-  setThresholdFromPosition(e.clientX);
-}
-
-function handlePointerMove(e) {
-  if (isDragging) {
-    setThresholdFromPosition(e.clientX);
-  }
-}
-
-function handlePointerUp(e) {
-  isDragging = false;
-  els.meterTrack.releasePointerCapture(e.pointerId);
-}
-
-els.meterTrack.addEventListener('pointerdown', handlePointerDown);
-els.meterTrack.addEventListener('pointermove', handlePointerMove);
-els.meterTrack.addEventListener('pointerup', handlePointerUp);
-els.meterTrack.addEventListener('pointercancel', handlePointerUp);
-
-// Touch fallback for older browsers
-els.meterTrack.addEventListener('touchstart', (e) => {
-  isDragging = true;
-  setThresholdFromPosition(e.touches[0].clientX);
-}, { passive: true });
-
-els.meterTrack.addEventListener('touchmove', (e) => {
-  if (isDragging) {
-    e.preventDefault();
-    setThresholdFromPosition(e.touches[0].clientX);
-  }
-}, { passive: false });
-
-els.meterTrack.addEventListener('touchend', () => {
-  isDragging = false;
-});
 
 els.startButton.addEventListener('click', () => {
   if (state.status === AppStatus.LISTENING || state.status === AppStatus.LOUD) {
@@ -446,4 +334,3 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 }
 
 updateThreshold();
-updateVolume(0);

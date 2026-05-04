@@ -27,18 +27,8 @@
           </div>
         </header>
 
-        <div class="meter-wrap" aria-label="Current noise level">
-          <div class="meter-track" id="meterTrack">
-            <div id="volumeFill" class="volume-fill"></div>
-          </div>
-          <div class="meter-labels" aria-hidden="true">
-            <span>Quiet</span>
-            <span>Loud</span>
-          </div>
-        </div>
-
         <div class="threshold-slider-wrap">
-          <label for="thresholdSlider" class="threshold-label">Noise Level Threshold</label>
+          <label for="thresholdSlider" class="threshold-label">Noise Level: <span id="thresholdValue">30</span></label>
           <input type="range" id="thresholdSlider" class="threshold-slider" min="0" max="100" value="30">
         </div>
 
