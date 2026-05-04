@@ -43,19 +43,14 @@
         </div>
 
         <form class="settings" onsubmit="return false;">
-          <label class="field">
-            <span>Personalised Message</span>
-            <input id="messageInput" type="text" value="Please keep quiet" maxlength="80" autocomplete="off" autocapitalize="sentences">
-          </label>
-
           <div class="toggle-row">
             <label class="switch">
-              <input id="speechToggle" type="checkbox" checked>
+              <input id="speechToggle" type="checkbox" checked disabled style="display:none;">
               <span class="switch-ui" aria-hidden="true"></span>
               <span>Speak alert</span>
             </label>
             <label class="switch">
-              <input id="beepToggle" type="checkbox" checked>
+              <input id="beepToggle" type="checkbox" checked disabled style="display:none;">
               <span class="switch-ui" aria-hidden="true"></span>
               <span>Beep fallback</span>
             </label>
@@ -73,7 +68,7 @@
       </section>
     </main>
 
-    <button id="hiddenTestButton" class="hidden-test-button" type="button" aria-label="Settings">
+    <button id="hiddenTestButton" class="hidden-test-button settings-red" type="button" aria-label="Settings">
       ⚙️
     </button>
 
