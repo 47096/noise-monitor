@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#f7f4ea">
+    <meta name="theme-color" content="#eef2ff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Noise Monitor">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -19,16 +19,13 @@
       <section class="monitor" aria-labelledby="app-title">
         <header class="app-header">
           <div class="mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" role="img">
-              <path d="M12 3a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0V7a4 4 0 0 0-4-4Z"></path>
-              <path d="M5 11a7 7 0 0 0 14 0"></path>
-              <path d="M12 18v3"></path>
-              <path d="M8.5 21h7"></path>
+            <svg viewBox="0 0 20 20" role="img">
+              <path d="M11.3 1.05A1 1 0 0 1 12 2v5h4a1 1 0 0 1 .82 1.57l-7 10A1 1 0 0 1 8 18v-5H4a1 1 0 0 1-.82-1.57l7-10a1 1 0 0 1 1.12-.38Z"></path>
             </svg>
           </div>
           <div>
             <h1 id="app-title">Noise Monitor</h1>
-            <p>Live room volume with spoken alerts.</p>
+            <p>Adjust the slider for noise sensitivity.</p>
           </div>
         </header>
 
@@ -56,13 +53,13 @@
 
         <form class="settings" onsubmit="return false;">
           <label class="field">
-            <span>Alert message</span>
+            <span>Personalised Message</span>
             <input id="messageInput" type="text" value="Please keep quiet" maxlength="80" autocomplete="off" autocapitalize="sentences">
           </label>
 
           <label class="field">
-            <span>Noise threshold <strong id="thresholdValue">45%</strong></span>
-            <input id="thresholdInput" class="slider" type="range" min="5" max="95" value="45">
+            <span>Noise threshold <strong id="thresholdValue">30%</strong></span>
+            <input id="thresholdInput" class="slider" type="range" min="0" max="100" value="30">
           </label>
 
           <div class="toggle-row">
