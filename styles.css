@@ -218,6 +218,17 @@ p {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(99, 102, 241, 0.25);
   cursor: grab;
   transition: transform 100ms ease, box-shadow 100ms ease;
+  display: grid;
+  place-items: center;
+}
+
+.threshold-line::before {
+  content: "";
+  width: 14px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
+  box-shadow: 0 -4px 0 rgba(255, 255, 255, 0.7), 0 4px 0 rgba(255, 255, 255, 0.7);
 }
 
 .threshold-line:active {
