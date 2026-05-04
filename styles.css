@@ -80,8 +80,8 @@ button {
   place-items: center;
   margin-bottom: 14px;
   border-radius: 24px;
-  background: var(--indigo-soft);
-  color: var(--indigo);
+  font-size: 64px;
+  line-height: 1;
 }
 
 .mark svg {
