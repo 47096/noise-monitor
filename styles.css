@@ -171,26 +171,33 @@ p {
   position: relative;
 }
 
-.current-level-bar {
+.slider-track-container {
+  position: relative;
+  height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.slider-track-bg {
   position: absolute;
-  left: 16px;
-  right: 16px;
-  top: 50%;
+  left: 0;
+  right: 0;
   height: 12px;
-  transform: translateY(-50%);
   background: var(--track);
   border-radius: 999px;
-  overflow: hidden;
-  pointer-events: none;
+  border: 1px solid rgba(15, 23, 42, 0.04);
   z-index: 1;
 }
 
-.current-level-bar-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(to right, var(--green), var(--amber), var(--red));
-  transition: width 0.1s ease;
+.slider-track-fill {
+  position: absolute;
+  left: 0;
+  height: 12px;
   border-radius: 999px;
+  background: linear-gradient(to right, var(--green), var(--amber), var(--red));
+  z-index: 2;
+  pointer-events: none;
+  transition: width 0.1s ease, background 0.2s ease;
 }
 
 .threshold-label {
@@ -210,13 +217,15 @@ p {
 }
 
 .threshold-slider {
+  position: absolute;
+  left: 0;
+  right: 0;
   width: 100%;
   height: 48px;
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
   cursor: pointer;
-  position: relative;
   z-index: 3;
 }
 
@@ -224,13 +233,12 @@ p {
   outline: none;
 }
 
-/* Webkit slider track */
+/* Webkit slider track - make transparent */
 .threshold-slider::-webkit-slider-runnable-track {
   width: 100%;
   height: 12px;
-  background: var(--track);
+  background: transparent;
   border-radius: 999px;
-  border: 1px solid rgba(15, 23, 42, 0.04);
 }
 
 /* Webkit slider thumb */
@@ -255,13 +263,12 @@ p {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25), 0 0 0 4px rgba(99, 102, 241, 0.35);
 }
 
-/* Firefox slider track */
+/* Firefox slider track - make transparent */
 .threshold-slider::-moz-range-track {
   width: 100%;
   height: 12px;
-  background: var(--track);
+  background: transparent;
   border-radius: 999px;
-  border: 1px solid rgba(15, 23, 42, 0.04);
 }
 
 /* Firefox slider thumb */

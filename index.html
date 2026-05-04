@@ -29,8 +29,11 @@
 
         <div class="threshold-slider-wrap">
           <label for="thresholdSlider" class="threshold-label">Noise Level: <span id="thresholdValue">30</span></label>
-          <input type="range" id="thresholdSlider" class="threshold-slider" min="0" max="100" value="30">
-          <div class="current-level-bar"><div class="current-level-bar-fill" id="currentLevelBarFill"></div></div>
+          <div class="slider-track-container">
+            <div class="slider-track-bg"></div>
+            <div class="slider-track-fill" id="trackFill"></div>
+            <input type="range" id="thresholdSlider" class="threshold-slider" min="0" max="100" value="30">
+          </div>
         </div>
 
         <div id="permissionNote" class="permission-note" hidden></div>
