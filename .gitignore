@@ -1,7 +1,41 @@
-# Image files
-*.png
-*.jpg
-*.jpeg
-*.bmp
-*.gif
-*.webm
+```gitignore
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.out
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+.env
+.env.local
+.env.*
+
+# Build directories
+dist/
+build/
+target/
+*.log
+*.tmp
+*.swp
+
+# Editors
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
+```
+
+Wait, I need to reconsider this. The only files mentioned in the changes are `app.js` and `index.html`, which are source files. There are no build artifacts, dependency directories, or temporary files shown in the changes that would require ignoring.
+
+(empty)

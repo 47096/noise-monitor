@@ -199,7 +199,7 @@ function stopMonitoring() {
   setStatus(AppStatus.IDLE, 'Ready');
   els.startButton.classList.remove('stop');
   els.startButton.querySelector('.button-icon').textContent = '▶';
-  els.startButton.querySelector('span:last-child').textContent = 'Start Monitoring';
+  els.startButton.querySelector('span:last-child').textContent = 'Start';
 }
 
 async function startMonitoring() {
@@ -243,7 +243,7 @@ async function startMonitoring() {
     setStatus(AppStatus.LISTENING, 'Monitoring');
     els.startButton.classList.add('stop');
     els.startButton.querySelector('.button-icon').textContent = '■';
-    els.startButton.querySelector('span:last-child').textContent = 'Stop Monitoring';
+    els.startButton.querySelector('span:last-child').textContent = 'Stop';
     state.frame = requestAnimationFrame(analyze);
   } catch (error) {
     stopMonitoring();
