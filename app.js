@@ -364,13 +364,22 @@ els.testButton.addEventListener('click', () => {
   speakAlert();
 });
 
-// Hidden test button functionality
+// Hidden test button functionality - navigate to settings section
 const hiddenTestButton = document.querySelector('#hiddenTestButton');
 if (hiddenTestButton) {
   hiddenTestButton.addEventListener('click', () => {
-    unlockSpeech();
-    speakAlert();
-    console.log('Hidden test button clicked!');
+    // Scroll to the settings section smoothly
+    const settingsSection = document.querySelector('.settings');
+    if (settingsSection) {
+      settingsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Highlight the settings section briefly
+      settingsSection.style.transition = 'background-color 0.3s ease';
+      settingsSection.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
+      setTimeout(() => {
+        settingsSection.style.backgroundColor = 'transparent';
+      }, 1500);
+    }
+    console.log('Settings button clicked - scrolled to settings section');
   });
 }
 
