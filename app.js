@@ -10,13 +10,10 @@ const els = {
   permissionNote: document.querySelector('#permissionNote'),
   thresholdSlider: document.querySelector('#thresholdSlider'),
   thresholdValue: document.querySelector('#thresholdValue'),
-  // Modal elements
-  settingsModal: document.querySelector('#settingsModal'),
-  modalMessageInput: document.querySelector('#modalMessageInput'),
-  modalSpeechToggle: document.querySelector('#modalSpeechToggle'),
-  modalBeepToggle: document.querySelector('#modalBeepToggle'),
-  modalTestButton: document.querySelector('#modalTestButton'),
-  closeSettingsBtn: document.querySelector('#closeSettingsBtn'),
+  messageInput: document.querySelector('#messageInput'),
+  speechToggle: document.querySelector('#speechToggle'),
+  beepToggle: document.querySelector('#beepToggle'),
+  testButton: document.querySelector('#testButton'),
 };
 
 const state = {
@@ -85,7 +82,7 @@ function unlockSpeech() {
 }
 
 function playBeep() {
-  if (!els.modalBeepToggle.checked || !state.audioContext || state.audioContext.state === 'closed') return;
+  if (!els.beepToggle.checked || !state.audioContext || state.audioContext.state === 'closed') return;
 
   if (state.audioContext.state === 'suspended') {
     state.audioContext.resume().catch(() => {});
@@ -108,10 +105,10 @@ function playBeep() {
 }
 
 function speakAlert() {
-  const message = els.modalMessageInput.value.trim();
+  const message = els.messageInput.value.trim();
   if (!message) return;
 
-  if (!els.modalSpeechToggle.checked || !('speechSynthesis' in window)) {
+  if (!els.speechToggle.checked || !('speechSynthesis' in window)) {
     playBeep();
     return;
   }
@@ -276,50 +273,12 @@ els.startButton.addEventListener('click', () => {
   }
 });
 
-// Hidden test button functionality - open settings modal
-const hiddenTestButton = document.querySelector('#hiddenTestButton');
-if (hiddenTestButton) {
-  hiddenTestButton.addEventListener('click', () => {
-    openSettingsModal();
-  });
-}
-
-// Close settings modal
-if (els.closeSettingsBtn) {
-  els.closeSettingsBtn.addEventListener('click', () => {
-    closeSettingsModal();
-  });
-}
-
-// Close modal when clicking outside
-if (els.settingsModal) {
-  els.settingsModal.addEventListener('click', (e) => {
-    if (e.target === els.settingsModal) {
-      closeSettingsModal();
-    }
-  });
-}
-
-// Modal Test Alert button
-if (els.modalTestButton) {
-  els.modalTestButton.addEventListener('click', () => {
+// Test Alert button
+if (els.testButton) {
+  els.testButton.addEventListener('click', () => {
     unlockSpeech();
     speakAlert();
   });
-}
-
-function openSettingsModal() {
-  if (els.settingsModal) {
-    els.settingsModal.hidden = false;
-  }
-}
-
-
-function closeSettingsModal() {
-  // Hide modal
-  if (els.settingsModal) {
-    els.settingsModal.hidden = true;
-  }
 }
 
 document.addEventListener('visibilitychange', handleVisibilityChange);

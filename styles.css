@@ -257,6 +257,19 @@ p {
   display: none;
 }
 
+.settings-inline {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.settings-inline h2 {
+  margin: 0 0 16px;
+  font-size: 1.125rem;
+  color: var(--ink);
+  font-weight: 700;
+}
+
 .settings {
   display: grid;
   gap: 18px;
@@ -442,112 +455,12 @@ input[type="text"]:focus {
   }
 }
 
-.hidden-test-button {
-  position: fixed;
-  bottom: 20px;
-  right: -40px;
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
-  background: var(--red);
-  color: white;
-  border: none;
-  font-weight: 700;
-  font-size: 1.5rem;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
-  transition: right 0.3s ease;
-  z-index: 1000;
-}
-
-.settings-red {
-  background: var(--red) !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2), 0 8px 22px rgba(244, 63, 94, 0.18) !important;
-}
-
-.hidden-test-button:hover {
-  right: 0;
-}
-
-/* Settings Modal Styles */
-.settings-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  padding: 20px;
-  backdrop-filter: blur(4px);
-}
-
-.settings-modal[hidden] {
-  display: none;
-}
-
-.settings-modal-content {
-  background: var(--panel);
-  border-radius: 24px;
-  box-shadow: var(--shadow);
-  width: min(100%, 448px);
-  max-height: 90vh;
-  overflow-y: auto;
-  animation: modalSlideIn 0.3s ease;
-}
-
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 24px 16px;
-  border-bottom: 1px solid var(--line);
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: var(--ink);
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  line-height: 1;
-  color: var(--muted);
-  cursor: pointer;
-  padding: 0;
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  transition: background 0.2s ease;
-}
-
-.close-btn:hover {
-  background: var(--track);
-}
-
+/* Remove modal and hidden button styles */
+.hidden-test-button,
+.settings-modal,
+.settings-modal-content,
+.modal-header,
+.close-btn,
 .modal-settings-form {
-  padding: 24px;
-  display: grid;
-  gap: 18px;
-}
-
-#modalTestButton {
-  margin-top: 8px;
-  width: 100%;
+  display: none !important;
 }
