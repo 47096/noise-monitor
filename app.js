@@ -66,9 +66,6 @@ function updateVolume(volume) {
   
   // Update the volume fill bar
   els.volumeFill.style.width = `${Math.min(100, Math.max(0, volume))}%`;
-  
-  // Draw waveform on canvas
-  drawWaveform();
 }
 
 function drawWaveform() {
@@ -111,9 +108,7 @@ function drawWaveform() {
     const barHeight = (dataArray[i] / 255) * displayHeight;
     
     ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.roundRect(x, (displayHeight - barHeight) / 2, barWidth - 1, barHeight, 2);
-    ctx.fill();
+    ctx.fillRect(x, (displayHeight - barHeight) / 2, Math.max(barWidth - 1, 1), barHeight);
     
     x += barWidth + 1;
   }
@@ -224,19 +219,12 @@ function analyze() {
 
   updateVolume(state.volume);
   maybeAlert(state.volume);
-  state.frame = requestAnimationFrame(analyze);
-}
-
-function drawWaveformLoop() {
-  if (!state.analyser) return;
-  
   drawWaveform();
-  state.animationId = requestAnimationFrame(drawWaveformLoop);
+  state.frame = requestAnimationFrame(analyze);
 }
 
 function stopMonitoring() {
   if (state.frame) cancelAnimationFrame(state.frame);
-  if (state.animationId) cancelAnimationFrame(state.animationId);
   if (state.stream) state.stream.getTracks().forEach((track) => track.stop());
   if (state.source) state.source.disconnect();
   if (state.analyser) state.analyser.disconnect();
@@ -248,7 +236,6 @@ function stopMonitoring() {
   state.stream = null;
   state.source = null;
   state.frame = 0;
-  state.animationId = null;
   state.buffer = null;
   state.volume = 0;
   state.isLoud = false;
@@ -303,7 +290,6 @@ async function startMonitoring() {
     els.startButton.querySelector('.button-icon').textContent = '■';
     els.startButton.querySelector('span:last-child').textContent = 'Stop';
     state.frame = requestAnimationFrame(analyze);
-    state.animationId = requestAnimationFrame(drawWaveformLoop);
   } catch (error) {
     stopMonitoring();
     setStatus(AppStatus.ERROR, 'Mic blocked');
