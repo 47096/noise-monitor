@@ -6,11 +6,18 @@ const AppStatus = {
 };
 
 const els = {
+  volumeValue: document.querySelector('#volumeValue'),
   volumeFill: document.querySelector('#volumeFill'),
   thresholdInput: document.querySelector('#thresholdInput'),
+  thresholdValue: document.querySelector('#thresholdValue'),
+  thresholdLine: document.querySelector('#thresholdLine'),
   messageInput: document.querySelector('#messageInput'),
+  speechToggle: document.querySelector('#speechToggle'),
+  beepToggle: document.querySelector('#beepToggle'),
   startButton: document.querySelector('#startButton'),
-  statusArea: document.querySelector('#statusArea'),
+  testButton: document.querySelector('#testButton'),
+  statusPill: document.querySelector('#statusPill'),
+  statusText: document.querySelector('#statusText'),
   permissionNote: document.querySelector('#permissionNote'),
 };
 
@@ -34,20 +41,8 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
 function setStatus(status, text) {
   state.status = status;
-
-  if (status === AppStatus.IDLE) {
-    els.statusArea.textContent = '';
-    return;
-  }
-
-  const className = status === AppStatus.ERROR && text.includes('denied') ? 'denied' : status;
-  const showDot = status === AppStatus.LISTENING || status === AppStatus.LOUD;
-  els.statusArea.innerHTML = `
-    <span class="status-message ${className}">
-      ${showDot ? '<span class="status-dot" aria-hidden="true"></span>' : ''}
-      <span>${text}</span>
-    </span>
-  `;
+  els.statusPill.className = `status-pill ${status}`;
+  els.statusText.textContent = text;
 }
 
 function showNote(message) {
@@ -57,10 +52,13 @@ function showNote(message) {
 
 function updateThreshold() {
   const threshold = Number(els.thresholdInput.value);
-  document.querySelector('.volume-control')?.setAttribute('title', `Threshold: ${threshold}`);
+  els.thresholdValue.textContent = `${threshold}%`;
+  els.thresholdLine.style.left = `${threshold}%`;
 }
 
 function updateVolume(volume) {
+  const rounded = Math.round(volume);
+  els.volumeValue.textContent = String(rounded);
   els.volumeFill.style.width = `${Math.min(100, Math.max(0, volume))}%`;
 }
 
@@ -85,7 +83,7 @@ function unlockSpeech() {
 }
 
 function playBeep() {
-  if (!state.audioContext || state.audioContext.state === 'closed') return;
+  if (!els.beepToggle.checked || !state.audioContext || state.audioContext.state === 'closed') return;
 
   if (state.audioContext.state === 'suspended') {
     state.audioContext.resume().catch(() => {});
@@ -111,7 +109,7 @@ function speakAlert() {
   const message = els.messageInput.value.trim();
   if (!message) return;
 
-  if (!('speechSynthesis' in window)) {
+  if (!els.speechToggle.checked || !('speechSynthesis' in window)) {
     playBeep();
     return;
   }
@@ -137,12 +135,10 @@ function maybeAlert(volume) {
 
   if (loud && !state.isLoud) {
     state.isLoud = true;
-    els.volumeFill.classList.add('loud');
     setStatus(AppStatus.LOUD, 'Too loud');
   } else if (!loud && state.isLoud) {
     state.isLoud = false;
-    els.volumeFill.classList.remove('loud');
-    setStatus(AppStatus.LISTENING, 'Monitoring in action');
+    setStatus(AppStatus.LISTENING, 'Monitoring');
   }
 
   const now = Date.now();
@@ -193,10 +189,10 @@ function stopMonitoring() {
   state.isLoud = false;
 
   updateVolume(0);
-  els.volumeFill.classList.remove('loud');
   setStatus(AppStatus.IDLE, 'Ready');
   els.startButton.classList.remove('stop');
-  els.startButton.querySelector('span').textContent = 'Start Monitoring';
+  els.startButton.querySelector('.button-icon').textContent = '▶';
+  els.startButton.querySelector('span:last-child').textContent = 'Start Monitoring';
 }
 
 async function startMonitoring() {
@@ -237,14 +233,15 @@ async function startMonitoring() {
     state.source = state.audioContext.createMediaStreamSource(state.stream);
     state.source.connect(state.analyser);
 
-    setStatus(AppStatus.LISTENING, 'Monitoring in action');
+    setStatus(AppStatus.LISTENING, 'Monitoring');
     els.startButton.classList.add('stop');
-    els.startButton.querySelector('span').textContent = 'Stop Monitoring';
+    els.startButton.querySelector('.button-icon').textContent = '■';
+    els.startButton.querySelector('span:last-child').textContent = 'Stop Monitoring';
     state.frame = requestAnimationFrame(analyze);
   } catch (error) {
     stopMonitoring();
+    setStatus(AppStatus.ERROR, 'Mic blocked');
     const denied = error && (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError');
-    setStatus(AppStatus.ERROR, denied ? 'Microphone permission denied.' : 'Mic blocked');
     showNote(denied
       ? 'Microphone permission was denied. In Safari, check Website Settings and allow Microphone for this site.'
       : 'Could not start the microphone. Close other apps using the mic, then try again.');
@@ -268,6 +265,10 @@ els.startButton.addEventListener('click', () => {
   } else {
     startMonitoring();
   }
+});
+els.testButton.addEventListener('click', () => {
+  unlockSpeech();
+  speakAlert();
 });
 document.addEventListener('visibilitychange', handleVisibilityChange);
 
