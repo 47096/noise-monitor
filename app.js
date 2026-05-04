@@ -135,9 +135,16 @@ function speakAlert() {
   try {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(message);
-    const voice = state.voices.find((item) => item.lang.toLowerCase().startsWith('en'));
-    if (voice) utterance.voice = voice;
-    utterance.lang = voice?.lang || 'en-US';
+    
+    // Smart voice selection for best cross-platform compatibility
+    const preferredVoice = getBestVoice();
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+      utterance.lang = preferredVoice.lang;
+    } else {
+      utterance.lang = 'en-US';
+    }
+    
     utterance.rate = 0.92;
     utterance.pitch = 1.02;
     utterance.onerror = () => playBeep();
@@ -145,6 +152,47 @@ function speakAlert() {
   } catch {
     playBeep();
   }
+}
+
+function getBestVoice() {
+  if (!state.voices || state.voices.length === 0) {
+    return null;
+  }
+
+  // Priority 1: Google US English (excellent on Android and Chrome)
+  const googleVoice = state.voices.find(
+    (voice) => voice.name.includes('Google US English') || 
+               (voice.name.includes('Google') && voice.lang.toLowerCase() === 'en-us')
+  );
+  if (googleVoice) return googleVoice;
+
+  // Priority 2: Samantha (excellent on iPhone/Mac)
+  const samanthaVoice = state.voices.find(
+    (voice) => voice.name.toLowerCase().includes('samantha')
+  );
+  if (samanthaVoice) return samanthaVoice;
+
+  // Priority 3: Serena (good alternative on Mac)
+  const serenaVoice = state.voices.find(
+    (voice) => voice.name.toLowerCase().includes('serena')
+  );
+  if (serenaVoice) return serenaVoice;
+
+  // Priority 4: Any high-quality English voice (Microsoft, Apple, etc.)
+  const premiumVoice = state.voices.find(
+    (voice) => voice.lang.toLowerCase().startsWith('en') &&
+               (voice.name.includes('Premium') || voice.name.includes('Natural'))
+  );
+  if (premiumVoice) return premiumVoice;
+
+  // Priority 5: Any English voice
+  const anyEnglishVoice = state.voices.find(
+    (voice) => voice.lang.toLowerCase().startsWith('en')
+  );
+  if (anyEnglishVoice) return anyEnglishVoice;
+
+  // Fallback: Use default system voice
+  return null;
 }
 
 function maybeAlert(volume) {
