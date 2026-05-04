@@ -79,31 +79,40 @@ function drawWaveform() {
   const bufferLength = state.analyser.frequencyBinCount;
   const dataArray = new Uint8Array(bufferLength);
   
-  // Set canvas size for high DPI displays
+  // Set canvas size for high DPI displays (only once, or when size changes)
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
+  const displayWidth = rect.width;
+  const displayHeight = rect.height;
+  
+  // Only resize if needed to avoid clearing the canvas unnecessarily
+  if (canvas.width !== Math.round(displayWidth * dpr) || canvas.height !== Math.round(displayHeight * dpr)) {
+    canvas.width = Math.round(displayWidth * dpr);
+    canvas.height = Math.round(displayHeight * dpr);
+  }
+  
+  // Reset transform before scaling to avoid accumulating scales
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(dpr, dpr);
   
   state.analyser.getByteFrequencyData(dataArray);
   
-  ctx.clearRect(0, 0, rect.width, rect.height);
+  ctx.clearRect(0, 0, displayWidth, displayHeight);
   
-  const barWidth = (rect.width / bufferLength) * 2.5;
+  const barWidth = (displayWidth / bufferLength) * 2.5;
   let x = 0;
   
   // Create gradient
-  const gradient = ctx.createLinearGradient(0, 0, 0, rect.height);
+  const gradient = ctx.createLinearGradient(0, 0, 0, displayHeight);
   gradient.addColorStop(0, '#6366f1');
   gradient.addColorStop(1, '#a5b4fc');
   
   for (let i = 0; i < bufferLength; i++) {
-    const barHeight = (dataArray[i] / 255) * rect.height;
+    const barHeight = (dataArray[i] / 255) * displayHeight;
     
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.roundRect(x, (rect.height - barHeight) / 2, barWidth - 1, barHeight, 2);
+    ctx.roundRect(x, (displayHeight - barHeight) / 2, barWidth - 1, barHeight, 2);
     ctx.fill();
     
     x += barWidth + 1;
