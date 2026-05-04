@@ -6,7 +6,7 @@ const AppStatus = {
 };
 
 const els = {
-  volumeValue: document.querySelector('#volumeValue'),
+  waveformBars: document.querySelector('#waveformBars'),
   volumeFill: document.querySelector('#volumeFill'),
   thresholdValue: document.querySelector('#thresholdValue'),
   thresholdLine: document.querySelector('#thresholdLine'),
@@ -66,7 +66,17 @@ function setThresholdFromPosition(clientX) {
 
 function updateVolume(volume) {
   const rounded = Math.round(volume);
-  els.volumeValue.textContent = String(rounded);
+  const barCount = 12;
+  const activeBars = Math.floor((rounded / 100) * barCount);
+  
+  let barsHTML = '';
+  for (let i = 0; i < barCount; i += 1) {
+    const barHeight = 8 + (i % 3) * 6;
+    const isActive = i < activeBars;
+    const opacity = isActive ? 1 : 0.2;
+    barsHTML += `<rect x="${i * 10}" y="${20 - barHeight / 2}" width="8" height="${barHeight}" rx="2" fill-opacity="${opacity}"/>`;
+  }
+  els.waveformBars.innerHTML = barsHTML;
   els.volumeFill.style.width = `${Math.min(100, Math.max(0, volume))}%`;
 }
 

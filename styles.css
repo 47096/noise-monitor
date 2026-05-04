@@ -109,10 +109,16 @@ p {
 
 .readout {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 14px;
   margin-top: 34px;
+}
+
+.waveform {
+  width: 120px;
+  height: 40px;
+  flex-shrink: 0;
 }
 
 .volume-number {
@@ -120,6 +126,7 @@ p {
   font-weight: 800;
   font-size: clamp(4rem, 22vw, 6.5rem);
   letter-spacing: 0;
+  display: none;
 }
 
 .unit {
