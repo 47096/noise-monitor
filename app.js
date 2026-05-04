@@ -12,10 +12,6 @@ const els = {
   thresholdValue: document.querySelector('#thresholdValue'),
   currentLevel: document.querySelector('#currentLevel'),
   trackFill: document.querySelector('#trackFill'),
-  messageInput: document.querySelector('#messageInput'),
-  speechToggle: document.querySelector('#speechToggle'),
-  beepToggle: document.querySelector('#beepToggle'),
-  testButton: document.querySelector('#testButton'),
 };
 
 const state = {
@@ -105,7 +101,7 @@ function unlockSpeech() {
 }
 
 function playBeep() {
-  if (!els.beepToggle.checked || !state.audioContext || state.audioContext.state === 'closed') return;
+  if (!state.audioContext || state.audioContext.state === 'closed') return;
 
   if (state.audioContext.state === 'suspended') {
     state.audioContext.resume().catch(() => {});
@@ -128,10 +124,9 @@ function playBeep() {
 }
 
 function speakAlert() {
-  const message = els.messageInput.value.trim();
-  if (!message) return;
+  const message = 'Quiet';
 
-  if (!els.speechToggle.checked || !('speechSynthesis' in window)) {
+  if (!('speechSynthesis' in window)) {
     playBeep();
     return;
   }
@@ -296,14 +291,6 @@ els.startButton.addEventListener('click', () => {
     startMonitoring();
   }
 });
-
-// Test Alert button
-if (els.testButton) {
-  els.testButton.addEventListener('click', () => {
-    unlockSpeech();
-    speakAlert();
-  });
-}
 
 document.addEventListener('visibilitychange', handleVisibilityChange);
 
