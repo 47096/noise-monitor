@@ -17,6 +17,13 @@ const els = {
   startButton: document.querySelector('#startButton'),
   testButton: document.querySelector('#testButton'),
   permissionNote: document.querySelector('#permissionNote'),
+  // Modal elements
+  settingsModal: document.querySelector('#settingsModal'),
+  modalMessageInput: document.querySelector('#modalMessageInput'),
+  modalSpeechToggle: document.querySelector('#modalSpeechToggle'),
+  modalBeepToggle: document.querySelector('#modalBeepToggle'),
+  modalTestButton: document.querySelector('#modalTestButton'),
+  closeSettingsBtn: document.querySelector('#closeSettingsBtn'),
 };
 
 const state = {
@@ -364,23 +371,72 @@ els.testButton.addEventListener('click', () => {
   speakAlert();
 });
 
-// Hidden test button functionality - navigate to settings section
+// Hidden test button functionality - open settings modal
 const hiddenTestButton = document.querySelector('#hiddenTestButton');
 if (hiddenTestButton) {
   hiddenTestButton.addEventListener('click', () => {
-    // Scroll to the settings section smoothly
-    const settingsSection = document.querySelector('.settings');
-    if (settingsSection) {
-      settingsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // Highlight the settings section briefly
-      settingsSection.style.transition = 'background-color 0.3s ease';
-      settingsSection.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
-      setTimeout(() => {
-        settingsSection.style.backgroundColor = 'transparent';
-      }, 1500);
-    }
-    console.log('Settings button clicked - scrolled to settings section');
+    openSettingsModal();
   });
+}
+
+// Close settings modal
+if (els.closeSettingsBtn) {
+  els.closeSettingsBtn.addEventListener('click', () => {
+    closeSettingsModal();
+  });
+}
+
+// Close modal when clicking outside
+if (els.settingsModal) {
+  els.settingsModal.addEventListener('click', (e) => {
+    if (e.target === els.settingsModal) {
+      closeSettingsModal();
+    }
+  });
+}
+
+// Modal Test Alert button
+if (els.modalTestButton) {
+  els.modalTestButton.addEventListener('click', () => {
+    unlockSpeech();
+    speakAlert();
+  });
+}
+
+function openSettingsModal() {
+  // Sync main form values to modal
+  if (els.modalMessageInput && els.messageInput) {
+    els.modalMessageInput.value = els.messageInput.value;
+  }
+  if (els.modalSpeechToggle && els.speechToggle) {
+    els.modalSpeechToggle.checked = els.speechToggle.checked;
+  }
+  if (els.modalBeepToggle && els.beepToggle) {
+    els.modalBeepToggle.checked = els.beepToggle.checked;
+  }
+  
+  // Show modal
+  if (els.settingsModal) {
+    els.settingsModal.hidden = false;
+  }
+}
+
+function closeSettingsModal() {
+  // Sync modal values back to main form
+  if (els.messageInput && els.modalMessageInput) {
+    els.messageInput.value = els.modalMessageInput.value;
+  }
+  if (els.speechToggle && els.modalSpeechToggle) {
+    els.speechToggle.checked = els.modalSpeechToggle.checked;
+  }
+  if (els.beepToggle && els.modalBeepToggle) {
+    els.beepToggle.checked = els.modalBeepToggle.checked;
+  }
+  
+  // Hide modal
+  if (els.settingsModal) {
+    els.settingsModal.hidden = true;
+  }
 }
 
 document.addEventListener('visibilitychange', handleVisibilityChange);
