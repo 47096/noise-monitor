@@ -444,7 +444,7 @@ input[type="text"]:focus {
   width: 60px;
   height: 60px;
   border-radius: 8px;
-  background: var(--indigo);
+  background: var(--red);
   color: white;
   border: none;
   font-weight: 700;
@@ -453,6 +453,11 @@ input[type="text"]:focus {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
   transition: right 0.3s ease;
   z-index: 1000;
+}
+
+.settings-red {
+  background: var(--red) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2), 0 8px 22px rgba(244, 63, 94, 0.18) !important;
 }
 
 .hidden-test-button:hover {
