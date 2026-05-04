@@ -324,12 +324,28 @@ p {
   color: var(--indigo);
 }
 
-input[type="text"] {
+.message-input-wrap {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #f8fafc;
+}
+
+.message-label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.alert-message-input {
   width: 100%;
-  min-height: 58px;
+  min-height: 52px;
   border: 2px solid var(--line);
   border-radius: 16px;
-  background: #f8fafc;
+  background: white;
   color: #1e293b;
   padding: 14px 20px;
   font-size: 1.125rem;
@@ -337,11 +353,18 @@ input[type="text"] {
   transition: border-color 160ms ease, box-shadow 160ms ease;
   -webkit-user-select: text;
   user-select: text;
+  text-align: center;
+  font-weight: 600;
 }
 
-input[type="text"]:focus {
-  border-color: #818cf8;
+.alert-message-input:focus {
+  border-color: var(--indigo);
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+}
+
+.alert-message-input::placeholder {
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .slider {
