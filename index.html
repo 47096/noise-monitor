@@ -27,10 +27,6 @@
           </div>
         </header>
 
-        <div class="readout" aria-live="polite">
-          <canvas id="waveformCanvas"></canvas>
-        </div>
-
         <div class="meter-wrap" aria-label="Current noise level">
           <div class="meter-track" id="meterTrack">
             <div id="volumeFill" class="volume-fill"></div>
@@ -41,13 +37,9 @@
           </div>
         </div>
 
-        <div class="threshold-control">
-          <button id="decreaseBtn" class="threshold-btn" type="button" aria-label="Decrease threshold">−</button>
-          <div id="thresholdDisplay" class="threshold-display" role="button" tabindex="0" aria-label="Threshold value, tap to edit">
-            <span id="thresholdValue" class="threshold-value">30</span>
-            <span class="threshold-unit">dB</span>
-          </div>
-          <button id="increaseBtn" class="threshold-btn" type="button" aria-label="Increase threshold">+</button>
+        <div class="threshold-slider-wrap">
+          <label for="thresholdSlider" class="threshold-label">Noise Level Threshold</label>
+          <input type="range" id="thresholdSlider" class="threshold-slider" min="0" max="100" value="30">
         </div>
 
         <div id="permissionNote" class="permission-note" hidden></div>
@@ -96,18 +88,6 @@
             Test Alert
           </button>
         </form>
-      </div>
-    </div>
-
-    <!-- Threshold Input Modal -->
-    <div id="thresholdInputModal" class="threshold-input-modal" hidden>
-      <div class="threshold-input-content">
-        <h3>Set Threshold (dB)</h3>
-        <input id="thresholdInputField" type="number" class="threshold-input-field" min="0" max="100" value="30">
-        <div class="threshold-input-actions">
-          <button id="thresholdInputCancel" class="threshold-input-cancel" type="button">Cancel</button>
-          <button id="thresholdInputConfirm" class="threshold-input-confirm" type="button">Set</button>
-        </div>
       </div>
     </div>
 

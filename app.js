@@ -12,11 +12,8 @@ const els = {
   meterTrack: document.querySelector('#meterTrack'),
   startButton: document.querySelector('#startButton'),
   permissionNote: document.querySelector('#permissionNote'),
-  // Threshold control elements
-  decreaseBtn: document.querySelector('#decreaseBtn'),
-  increaseBtn: document.querySelector('#increaseBtn'),
-  thresholdDisplay: document.querySelector('#thresholdDisplay'),
-  thresholdValue: document.querySelector('#thresholdValue'),
+  // Threshold slider
+  thresholdSlider: document.querySelector('#thresholdSlider'),
   // Modal elements
   settingsModal: document.querySelector('#settingsModal'),
   modalMessageInput: document.querySelector('#modalMessageInput'),
@@ -24,11 +21,6 @@ const els = {
   modalBeepToggle: document.querySelector('#modalBeepToggle'),
   modalTestButton: document.querySelector('#modalTestButton'),
   closeSettingsBtn: document.querySelector('#closeSettingsBtn'),
-  // Threshold input modal
-  thresholdInputModal: document.querySelector('#thresholdInputModal'),
-  thresholdInputField: document.querySelector('#thresholdInputField'),
-  thresholdInputCancel: document.querySelector('#thresholdInputCancel'),
-  thresholdInputConfirm: document.querySelector('#thresholdInputConfirm'),
 };
 
 const state = {
@@ -62,36 +54,10 @@ function showNote(message) {
 
 function updateThreshold() {
   els.thresholdLine.style.left = `${state.threshold}%`;
-  // Update the digital display
-  if (els.thresholdValue) {
-    els.thresholdValue.textContent = state.threshold;
+  // Update the slider value
+  if (els.thresholdSlider) {
+    els.thresholdSlider.value = state.threshold;
   }
-  // Update background color based on threshold value
-  updateThresholdColor();
-}
-
-function updateThresholdColor() {
-  const threshold = state.threshold;
-  const controlEl = document.querySelector('.threshold-control');
-  const displayEl = els.thresholdDisplay;
-  
-  // Remove existing color classes
-  controlEl?.classList.remove('safe', 'warning', 'danger');
-  displayEl?.classList.remove('safe', 'warning', 'danger');
-  
-  // Determine color based on threshold
-  // Safe: 0-50, Warning: 51-75, Danger: 76-100
-  let colorClass;
-  if (threshold <= 50) {
-    colorClass = 'safe';
-  } else if (threshold <= 75) {
-    colorClass = 'warning';
-  } else {
-    colorClass = 'danger';
-  }
-  
-  controlEl?.classList.add(colorClass);
-  displayEl?.classList.add(colorClass);
 }
 
 function setThresholdFromPosition(clientX) {
@@ -272,7 +238,6 @@ function analyze() {
 
   updateVolume(state.volume);
   maybeAlert(state.volume);
-  drawWaveform();
   state.frame = requestAnimationFrame(analyze);
 }
 
@@ -298,7 +263,6 @@ function stopMonitoring() {
   els.startButton.classList.remove('stop');
   els.startButton.querySelector('.button-icon').textContent = '▶';
   els.startButton.querySelector('span:last-child').textContent = 'Start';
-  drawWaveform();
 }
 
 async function startMonitoring() {
@@ -367,55 +331,14 @@ function handleVisibilityChange() {
 // Threshold control via meter track
 let isDragging = false;
 
-// Long-press handling for threshold buttons
-let longPressTimer = null;
-let longPressInterval = null;
-let longPressSpeed = 500; // Initial delay before repeat in ms
-
-function startLongPress(button, delta) {
-  // Clear any existing timers
-  if (longPressTimer) clearTimeout(longPressTimer);
-  if (longPressInterval) clearInterval(longPressInterval);
-  
-  // Add visual feedback
-  button.classList.add('long-press');
-  
-  // First increment/decrement after initial delay
-  longPressTimer = setTimeout(() => {
-    changeThreshold(delta);
-    
-    // Then repeat at increasing speed
-    longPressSpeed = 300;
-    longPressInterval = setInterval(() => {
-      changeThreshold(delta);
-      // Speed up over time
-      if (longPressSpeed > 80) {
-        longPressSpeed -= 20;
-        clearInterval(longPressInterval);
-        longPressInterval = setInterval(() => {
-          changeThreshold(delta);
-        }, longPressSpeed);
-      }
-    }, longPressSpeed);
-  }, 600); // Initial 600ms delay before first repeat
-}
-
-function stopLongPress() {
-  if (longPressTimer) clearTimeout(longPressTimer);
-  if (longPressInterval) clearInterval(longPressInterval);
-  longPressTimer = null;
-  longPressInterval = null;
-  longPressSpeed = 500;
-  
-  // Remove visual feedback from all buttons
-  els.decreaseBtn?.classList.remove('long-press');
-  els.increaseBtn?.classList.remove('long-press');
-}
-
-function changeThreshold(delta) {
-  const newValue = state.threshold + delta;
-  state.threshold = Math.min(100, Math.max(0, newValue));
+function handleSliderInput(e) {
+  state.threshold = parseInt(e.target.value, 10);
   updateThreshold();
+}
+
+// Initialize slider event listener
+if (els.thresholdSlider) {
+  els.thresholdSlider.addEventListener('input', handleSliderInput);
 }
 
 function handlePointerDown(e) {
@@ -457,70 +380,6 @@ els.meterTrack.addEventListener('touchend', () => {
   isDragging = false;
 });
 
-// Threshold button controls with tap and long-press
-if (els.decreaseBtn) {
-  let isLongPress = false;
-  
-  els.decreaseBtn.addEventListener('pointerdown', (e) => {
-    isLongPress = false;
-    startLongPress(els.decreaseBtn, -1);
-  });
-  
-  els.decreaseBtn.addEventListener('pointerup', () => {
-    if (!longPressTimer && !longPressInterval) {
-      // If timers were cleared without triggering, it was a tap
-      changeThreshold(-1);
-    }
-    stopLongPress();
-  });
-  
-  els.decreaseBtn.addEventListener('pointercancel', () => {
-    stopLongPress();
-  });
-  
-  els.decreaseBtn.addEventListener('pointerleave', () => {
-    stopLongPress();
-  });
-}
-
-if (els.increaseBtn) {
-  els.increaseBtn.addEventListener('pointerdown', (e) => {
-    isLongPress = false;
-    startLongPress(els.increaseBtn, 1);
-  });
-  
-  els.increaseBtn.addEventListener('pointerup', () => {
-    if (!longPressTimer && !longPressInterval) {
-      // If timers were cleared without triggering, it was a tap
-      changeThreshold(1);
-    }
-    stopLongPress();
-  });
-  
-  els.increaseBtn.addEventListener('pointercancel', () => {
-    stopLongPress();
-  });
-  
-  els.increaseBtn.addEventListener('pointerleave', () => {
-    stopLongPress();
-  });
-}
-
-// Tap on display to manually enter value
-if (els.thresholdDisplay) {
-  els.thresholdDisplay.addEventListener('click', () => {
-    openThresholdInputModal();
-  });
-  
-  // Also support keyboard activation
-  els.thresholdDisplay.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openThresholdInputModal();
-    }
-  });
-}
-
 els.startButton.addEventListener('click', () => {
   if (state.status === AppStatus.LISTENING || state.status === AppStatus.LOUD) {
     stopMonitoring();
@@ -561,66 +420,6 @@ if (els.modalTestButton) {
   });
 }
 
-// Threshold input modal functions
-function openThresholdInputModal() {
-  if (els.thresholdInputModal && els.thresholdInputField) {
-    els.thresholdInputField.value = state.threshold;
-    els.thresholdInputModal.hidden = false;
-    // Focus and select the input field after a short delay
-    setTimeout(() => {
-      els.thresholdInputField.focus();
-      els.thresholdInputField.select();
-    }, 100);
-  }
-}
-
-function closeThresholdInputModal() {
-  if (els.thresholdInputModal) {
-    els.thresholdInputModal.hidden = true;
-  }
-}
-
-function confirmThresholdInput() {
-  const value = parseInt(els.thresholdInputField?.value, 10);
-  if (!isNaN(value)) {
-    state.threshold = Math.min(100, Math.max(0, value));
-    updateThreshold();
-  }
-  closeThresholdInputModal();
-}
-
-// Threshold input modal event listeners
-if (els.thresholdInputCancel) {
-  els.thresholdInputCancel.addEventListener('click', () => {
-    closeThresholdInputModal();
-  });
-}
-
-if (els.thresholdInputConfirm) {
-  els.thresholdInputConfirm.addEventListener('click', () => {
-    confirmThresholdInput();
-  });
-}
-
-if (els.thresholdInputModal) {
-  els.thresholdInputModal.addEventListener('click', (e) => {
-    if (e.target === els.thresholdInputModal) {
-      closeThresholdInputModal();
-    }
-  });
-}
-
-if (els.thresholdInputField) {
-  els.thresholdInputField.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      confirmThresholdInput();
-    } else if (e.key === 'Escape') {
-      closeThresholdInputModal();
-    }
-  });
-}
-
 function openSettingsModal() {
   if (els.settingsModal) {
     els.settingsModal.hidden = false;
@@ -648,4 +447,3 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 
 updateThreshold();
 updateVolume(0);
-drawWaveform();
