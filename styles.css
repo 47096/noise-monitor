@@ -168,23 +168,29 @@ p {
   padding: 16px;
   border-radius: 20px;
   background: #f8fafc;
+  position: relative;
 }
 
-.current-level-indicator {
-  margin-top: 12px;
-  text-align: center;
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--indigo);
-  padding: 8px 16px;
-  border-radius: 12px;
-  background: var(--indigo-soft);
-  transition: background-color 0.2s ease, color 0.2s ease;
+.current-level-bar {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 50%;
+  height: 12px;
+  transform: translateY(-50%);
+  background: var(--track);
+  border-radius: 999px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.current-level-indicator span {
-  font-weight: 800;
-  font-size: 1.25rem;
+.current-level-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(to right, var(--green), var(--amber), var(--red));
+  transition: width 0.1s ease;
+  border-radius: 999px;
 }
 
 .threshold-label {
@@ -194,6 +200,8 @@ p {
   color: var(--ink);
   margin-bottom: 12px;
   text-align: center;
+  position: relative;
+  z-index: 2;
 }
 
 #thresholdValue {
@@ -208,6 +216,8 @@ p {
   appearance: none;
   background: transparent;
   cursor: pointer;
+  position: relative;
+  z-index: 3;
 }
 
 .threshold-slider:focus {
@@ -235,6 +245,8 @@ p {
   cursor: grab;
   margin-top: -9px;
   transition: transform 100ms ease, box-shadow 100ms ease;
+  position: relative;
+  z-index: 2;
 }
 
 .threshold-slider::-webkit-slider-thumb:active {

@@ -11,6 +11,7 @@ const els = {
   thresholdSlider: document.querySelector('#thresholdSlider'),
   thresholdValue: document.querySelector('#thresholdValue'),
   currentLevel: document.querySelector('#currentLevel'),
+  currentLevelBarFill: document.querySelector('#currentLevelBarFill'),
   messageInput: document.querySelector('#messageInput'),
   speechToggle: document.querySelector('#speechToggle'),
   beepToggle: document.querySelector('#beepToggle'),
@@ -58,28 +59,27 @@ function updateThreshold() {
 }
 
 function updateVolume(volume) {
-  // Update the current noise level display
+  // Update the current noise level display (kept for backwards compatibility, but hidden)
   if (els.currentLevel) {
     els.currentLevel.textContent = Math.round(volume);
   }
   
-  // Update background color based on noise level relative to threshold
-  const indicator = document.querySelector('.current-level-indicator');
-  if (indicator) {
+  // Update the progress bar inside the slider
+  if (els.currentLevelBarFill) {
+    els.currentLevelBarFill.style.width = `${Math.min(100, volume)}%`;
+    
+    // Update background color based on noise level relative to threshold
     const percentage = volume / state.threshold;
     
     if (percentage >= 1) {
       // At or above threshold - danger zone (red)
-      indicator.style.backgroundColor = 'var(--red-soft)';
-      indicator.style.color = 'var(--red)';
+      els.currentLevelBarFill.style.background = 'var(--red)';
     } else if (percentage >= 0.7) {
       // Approaching threshold - warning zone (amber)
-      indicator.style.backgroundColor = 'var(--amber-soft)';
-      indicator.style.color = 'var(--amber)';
+      els.currentLevelBarFill.style.background = 'var(--amber)';
     } else {
-      // Safe zone (green/indigo)
-      indicator.style.backgroundColor = 'var(--green-soft)';
-      indicator.style.color = 'var(--green)';
+      // Safe zone (green)
+      els.currentLevelBarFill.style.background = 'var(--green)';
     }
   }
 }
