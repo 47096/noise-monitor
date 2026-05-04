@@ -12,6 +12,7 @@ const els = {
   thresholdValue: document.querySelector('#thresholdValue'),
   currentLevel: document.querySelector('#currentLevel'),
   trackFill: document.querySelector('#trackFill'),
+  alertMessageInput: document.querySelector('#alertMessage'),
 };
 
 const state = {
@@ -124,7 +125,7 @@ function playBeep() {
 }
 
 function speakAlert() {
-  const message = 'Quiet';
+  const message = els.alertMessageInput?.value?.trim() || 'Quiet';
 
   if (!('speechSynthesis' in window)) {
     playBeep();
@@ -279,9 +280,33 @@ function handleSliderInput(e) {
   updateThreshold();
 }
 
+// Alert message input event listener
+function handleMessageInput(e) {
+  // Save to localStorage for persistence
+  try {
+    localStorage.setItem('alertMessage', e.target.value);
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
 // Initialize slider event listener
 if (els.thresholdSlider) {
   els.thresholdSlider.addEventListener('input', handleSliderInput);
+}
+
+// Initialize message input event listener
+if (els.alertMessageInput) {
+  els.alertMessageInput.addEventListener('input', handleMessageInput);
+  // Load saved message from localStorage
+  try {
+    const savedMessage = localStorage.getItem('alertMessage');
+    if (savedMessage) {
+      els.alertMessageInput.value = savedMessage;
+    }
+  } catch {
+    // Ignore localStorage errors
+  }
 }
 
 els.startButton.addEventListener('click', () => {
