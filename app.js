@@ -10,7 +10,6 @@ const els = {
   volumeFill: document.querySelector('#volumeFill'),
   thresholdLine: document.querySelector('#thresholdLine'),
   meterTrack: document.querySelector('#meterTrack'),
-  messageInput: document.querySelector('#messageInput'),
   startButton: document.querySelector('#startButton'),
   permissionNote: document.querySelector('#permissionNote'),
   // Modal elements
@@ -172,7 +171,7 @@ function playBeep() {
 }
 
 function speakAlert() {
-  const message = els.messageInput.value.trim();
+  const message = els.modalMessageInput.value.trim();
   if (!message) return;
 
   if (!els.modalSpeechToggle.checked || !('speechSynthesis' in window)) {
@@ -408,23 +407,13 @@ if (els.modalTestButton) {
 }
 
 function openSettingsModal() {
-  // Sync main form values to modal
-  if (els.modalMessageInput && els.messageInput) {
-    els.modalMessageInput.value = els.messageInput.value;
-  }
-  
-  // Show modal
   if (els.settingsModal) {
     els.settingsModal.hidden = false;
   }
 }
 
+
 function closeSettingsModal() {
-  // Sync modal values back to main form
-  if (els.messageInput && els.modalMessageInput) {
-    els.messageInput.value = els.modalMessageInput.value;
-  }
-  
   // Hide modal
   if (els.settingsModal) {
     els.settingsModal.hidden = true;
