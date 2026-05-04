@@ -16,8 +16,6 @@ const els = {
   beepToggle: document.querySelector('#beepToggle'),
   startButton: document.querySelector('#startButton'),
   testButton: document.querySelector('#testButton'),
-  statusPill: document.querySelector('#statusPill'),
-  statusText: document.querySelector('#statusText'),
   permissionNote: document.querySelector('#permissionNote'),
 };
 
@@ -42,8 +40,6 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
 function setStatus(status, text) {
   state.status = status;
-  els.statusPill.className = `status-pill ${status}`;
-  els.statusText.textContent = text;
 }
 
 function showNote(message) {
