@@ -12,6 +12,7 @@ const els = {
   thresholdValue: document.querySelector('#thresholdValue'),
   trackFill: document.querySelector('#trackFill'),
   alertMessageInput: document.querySelector('#alertMessage'),
+  waveformChart: document.querySelector('#waveformChart'),
 };
 
 const state = {
@@ -29,6 +30,10 @@ const state = {
   speechUnlocked: false,
   threshold: 30,
   animationId: null,
+  waveformHistory: [],
+  chartCtx: null,
+  chartWidth: 0,
+  chartHeight: 0,
 };
 
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
@@ -54,6 +59,100 @@ function updateThreshold() {
   }
 }
 
+function initChart() {
+  if (!els.waveformChart) return;
+  
+  const rect = els.waveformChart.getBoundingClientRect();
+  state.chartWidth = rect.width || 300;
+  state.chartHeight = rect.height || 80;
+  
+  // Set canvas size for high DPI displays
+  const dpr = window.devicePixelRatio || 1;
+  els.waveformChart.width = state.chartWidth * dpr;
+  els.waveformChart.height = state.chartHeight * dpr;
+  els.waveformChart.style.width = `${state.chartWidth}px`;
+  els.waveformChart.style.height = `${state.chartHeight}px`;
+  
+  state.chartCtx = els.waveformChart.getContext('2d');
+  state.chartCtx.scale(dpr, dpr);
+  
+  // Initialize history array
+  const maxPoints = Math.floor(state.chartWidth / 2);
+  state.waveformHistory = new Array(maxPoints).fill(0);
+}
+
+function drawWaveform() {
+  if (!state.chartCtx || !els.waveformChart) return;
+  
+  const ctx = state.chartCtx;
+  const width = state.chartWidth;
+  const height = state.chartHeight;
+  
+  // Clear canvas
+  ctx.clearRect(0, 0, width, height);
+  
+  // Create gradient based on current volume vs threshold
+  const gradient = ctx.createLinearGradient(0, 0, 0, height);
+  const percentage = state.volume / state.threshold;
+  
+  if (percentage >= 1) {
+    gradient.addColorStop(0, 'rgba(244, 63, 94, 0.8)');
+    gradient.addColorStop(1, 'rgba(244, 63, 94, 0.2)');
+  } else if (percentage >= 0.7) {
+    gradient.addColorStop(0, 'rgba(217, 119, 6, 0.8)');
+    gradient.addColorStop(1, 'rgba(217, 119, 6, 0.2)');
+  } else {
+    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.8)');
+    gradient.addColorStop(1, 'rgba(16, 185, 129, 0.2)');
+  }
+  
+  // Add current volume to history
+  state.waveformHistory.push(state.volume);
+  state.waveformHistory.shift();
+  
+  // Draw the waveform line
+  ctx.beginPath();
+  ctx.strokeStyle = gradient;
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  
+  const step = width / state.waveformHistory.length;
+  
+  for (let i = 0; i < state.waveformHistory.length; i++) {
+    const x = i * step;
+    const y = height / 2 - (state.waveformHistory[i] / 100) * (height / 2 - 4);
+    
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
+  
+  ctx.stroke();
+  
+  // Draw filled area below the line
+  ctx.lineTo(width, height);
+  ctx.lineTo(0, height);
+  ctx.closePath();
+  
+  const fillGradient = ctx.createLinearGradient(0, 0, 0, height);
+  if (percentage >= 1) {
+    fillGradient.addColorStop(0, 'rgba(244, 63, 94, 0.3)');
+    fillGradient.addColorStop(1, 'rgba(244, 63, 94, 0.05)');
+  } else if (percentage >= 0.7) {
+    fillGradient.addColorStop(0, 'rgba(217, 119, 6, 0.3)');
+    fillGradient.addColorStop(1, 'rgba(217, 119, 6, 0.05)');
+  } else {
+    fillGradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+    fillGradient.addColorStop(1, 'rgba(16, 185, 129, 0.05)');
+  }
+  
+  ctx.fillStyle = fillGradient;
+  ctx.fill();
+}
+
 function updateVolume(volume) {
   // Update the progress bar in the slider track
   if (els.trackFill) {
@@ -73,6 +172,9 @@ function updateVolume(volume) {
       els.trackFill.style.background = 'var(--green)';
     }
   }
+  
+  // Draw waveform visualization
+  drawWaveform();
 }
 
 function loadVoices() {
@@ -245,6 +347,11 @@ function stopMonitoring() {
   state.volume = 0;
   state.isLoud = false;
 
+  // Clear the waveform chart
+  if (state.chartCtx && els.waveformChart) {
+    state.chartCtx.clearRect(0, 0, state.chartWidth, state.chartHeight);
+  }
+
   setStatus(AppStatus.IDLE, 'Ready');
   els.startButton.classList.remove('stop');
   els.startButton.querySelector('.button-icon').textContent = '▶';
@@ -268,6 +375,9 @@ async function startMonitoring() {
 
   unlockSpeech();
   stopMonitoring();
+  
+  // Initialize the waveform chart
+  initChart();
 
   try {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
