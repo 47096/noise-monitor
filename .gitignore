@@ -1,37 +1,43 @@
+```gitignore
 # Compiled and binary files
 *.pyc
-__pycache__/
+*.class
 *.o
-*.obj
 *.exe
 *.dll
 *.so
 *.a
+*.obj
 *.out
 
 # Dependencies
 node_modules/
 venv/
 .venv/
+__pycache__/
+dist/
+build/
+target/
+.gradle/
+.mypy_cache/
+.pytest_cache/
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# System/Environment files
+.DS_Store
+Thumbs.db
 .env
 .env.local
 *.env.*
 
-# Build artifacts
-dist/
-build/
-target/
-
-# Logs and temp files
+# Logs and coverage
 *.log
-*.tmp
-*.swp
-
-# Editors
-.vscode/
-.idea/
-
-# Coverage
 coverage/
 htmlcov/
 .coverage
@@ -59,53 +65,4 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-
-# System files
-.DS_Store
-Thumbs.db
-
-# Python specific
-*.pyc
-__pycache__/
-.mypy_cache/
-.pytest_cache/
-
-# Java specific
-*.class
-*.jar
-.gradle/
-
-# C/C++ specific
-*.o
-*.obj
-*.a
-*.so
-*.dll
-*.exe
-
-# Go specific
-*.o
-*.a
-*.out
-
-# Node specific
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Ruby specific
-*.gem
-*.rbc
-.bundle/
-vendor/bundle/
-
-# Rust specific
-target/
-Cargo.lock
-
-# Julia specific
-julia-*/
-
-# Zig specific
-zig*/
+```

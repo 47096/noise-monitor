@@ -8,14 +8,12 @@ const AppStatus = {
 const els = {
   waveformCanvas: document.querySelector('#waveformCanvas'),
   volumeFill: document.querySelector('#volumeFill'),
-  thresholdValue: document.querySelector('#thresholdValue'),
   thresholdLine: document.querySelector('#thresholdLine'),
   meterTrack: document.querySelector('#meterTrack'),
   messageInput: document.querySelector('#messageInput'),
   speechToggle: document.querySelector('#speechToggle'),
   beepToggle: document.querySelector('#beepToggle'),
   startButton: document.querySelector('#startButton'),
-  testButton: document.querySelector('#testButton'),
   permissionNote: document.querySelector('#permissionNote'),
   // Modal elements
   settingsModal: document.querySelector('#settingsModal'),
@@ -56,7 +54,6 @@ function showNote(message) {
 }
 
 function updateThreshold() {
-  els.thresholdValue.textContent = `${state.threshold}%`;
   els.thresholdLine.style.left = `${state.threshold}%`;
 }
 
@@ -378,10 +375,6 @@ els.startButton.addEventListener('click', () => {
   } else {
     startMonitoring();
   }
-});
-els.testButton.addEventListener('click', () => {
-  unlockSpeech();
-  speakAlert();
 });
 
 // Hidden test button functionality - open settings modal
