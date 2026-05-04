@@ -41,7 +41,7 @@
         </div>
 
         <div class="meter-wrap" aria-label="Current noise level">
-          <div class="meter-track">
+          <div class="meter-track" id="meterTrack">
             <div id="volumeFill" class="volume-fill"></div>
             <div id="thresholdLine" class="threshold-line"></div>
           </div>
@@ -49,6 +49,7 @@
             <span>Quiet</span>
             <span>Loud</span>
           </div>
+          <p class="meter-hint">Tap or drag to set threshold</p>
         </div>
 
         <form class="settings" onsubmit="return false;">
@@ -59,7 +60,6 @@
 
           <label class="field">
             <span>Noise threshold <strong id="thresholdValue">30%</strong></span>
-            <input id="thresholdInput" class="slider" type="range" min="0" max="100" value="30">
           </label>
 
           <div class="toggle-row">
