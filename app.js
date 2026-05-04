@@ -6,7 +6,7 @@ const AppStatus = {
 };
 
 const els = {
-  waveformBars: document.querySelector('#waveformBars'),
+  waveformCanvas: document.querySelector('#waveformCanvas'),
   volumeFill: document.querySelector('#volumeFill'),
   thresholdValue: document.querySelector('#thresholdValue'),
   thresholdLine: document.querySelector('#thresholdLine'),
@@ -33,6 +33,7 @@ const state = {
   voices: [],
   speechUnlocked: false,
   threshold: 30,
+  animationId: null,
 };
 
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
@@ -62,18 +63,51 @@ function setThresholdFromPosition(clientX) {
 
 function updateVolume(volume) {
   const rounded = Math.round(volume);
-  const barCount = 12;
-  const activeBars = Math.floor((rounded / 100) * barCount);
   
-  let barsHTML = '';
-  for (let i = 0; i < barCount; i += 1) {
-    const barHeight = 8 + (i % 3) * 6;
-    const isActive = i < activeBars;
-    const opacity = isActive ? 1 : 0.2;
-    barsHTML += `<rect x="${i * 10}" y="${20 - barHeight / 2}" width="8" height="${barHeight}" rx="2" fill-opacity="${opacity}"/>`;
-  }
-  els.waveformBars.innerHTML = barsHTML;
+  // Update the volume fill bar
   els.volumeFill.style.width = `${Math.min(100, Math.max(0, volume))}%`;
+  
+  // Draw waveform on canvas
+  drawWaveform();
+}
+
+function drawWaveform() {
+  if (!els.waveformCanvas || !state.analyser) return;
+  
+  const canvas = els.waveformCanvas;
+  const ctx = canvas.getContext('2d');
+  const bufferLength = state.analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+  
+  // Set canvas size for high DPI displays
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  
+  state.analyser.getByteFrequencyData(dataArray);
+  
+  ctx.clearRect(0, 0, rect.width, rect.height);
+  
+  const barWidth = (rect.width / bufferLength) * 2.5;
+  let x = 0;
+  
+  // Create gradient
+  const gradient = ctx.createLinearGradient(0, 0, 0, rect.height);
+  gradient.addColorStop(0, '#6366f1');
+  gradient.addColorStop(1, '#a5b4fc');
+  
+  for (let i = 0; i < bufferLength; i++) {
+    const barHeight = (dataArray[i] / 255) * rect.height;
+    
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.roundRect(x, (rect.height - barHeight) / 2, barWidth - 1, barHeight, 2);
+    ctx.fill();
+    
+    x += barWidth + 1;
+  }
 }
 
 function loadVoices() {
@@ -184,8 +218,16 @@ function analyze() {
   state.frame = requestAnimationFrame(analyze);
 }
 
+function drawWaveformLoop() {
+  if (!state.analyser) return;
+  
+  drawWaveform();
+  state.animationId = requestAnimationFrame(drawWaveformLoop);
+}
+
 function stopMonitoring() {
   if (state.frame) cancelAnimationFrame(state.frame);
+  if (state.animationId) cancelAnimationFrame(state.animationId);
   if (state.stream) state.stream.getTracks().forEach((track) => track.stop());
   if (state.source) state.source.disconnect();
   if (state.analyser) state.analyser.disconnect();
@@ -197,6 +239,7 @@ function stopMonitoring() {
   state.stream = null;
   state.source = null;
   state.frame = 0;
+  state.animationId = null;
   state.buffer = null;
   state.volume = 0;
   state.isLoud = false;
@@ -251,6 +294,7 @@ async function startMonitoring() {
     els.startButton.querySelector('.button-icon').textContent = '■';
     els.startButton.querySelector('span:last-child').textContent = 'Stop';
     state.frame = requestAnimationFrame(analyze);
+    state.animationId = requestAnimationFrame(drawWaveformLoop);
   } catch (error) {
     stopMonitoring();
     setStatus(AppStatus.ERROR, 'Mic blocked');
