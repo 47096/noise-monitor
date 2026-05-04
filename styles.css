@@ -436,3 +436,25 @@ input[type="text"]:focus {
     width: 100%;
   }
 }
+
+.hidden-test-button {
+  position: fixed;
+  bottom: 20px;
+  right: -40px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--indigo);
+  color: white;
+  border: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  transition: right 0.3s ease;
+  z-index: 1000;
+}
+
+.hidden-test-button:hover {
+  right: 0;
+}
