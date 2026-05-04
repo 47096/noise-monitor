@@ -128,7 +128,6 @@ function speakAlert() {
   const message = els.alertMessageInput?.value?.trim() || 'Quiet';
 
   if (!('speechSynthesis' in window)) {
-    playBeep();
     return;
   }
 
@@ -147,10 +146,9 @@ function speakAlert() {
     
     utterance.rate = 0.92;
     utterance.pitch = 1.02;
-    utterance.onerror = () => playBeep();
     window.speechSynthesis.speak(utterance);
   } catch {
-    playBeep();
+    // Silently fail if speech synthesis fails
   }
 }
 
