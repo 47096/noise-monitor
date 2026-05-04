@@ -363,6 +363,17 @@ els.testButton.addEventListener('click', () => {
   unlockSpeech();
   speakAlert();
 });
+
+// Hidden test button functionality
+const hiddenTestButton = document.querySelector('#hiddenTestButton');
+if (hiddenTestButton) {
+  hiddenTestButton.addEventListener('click', () => {
+    unlockSpeech();
+    speakAlert();
+    console.log('Hidden test button clicked!');
+  });
+}
+
 document.addEventListener('visibilitychange', handleVisibilityChange);
 
 if ('speechSynthesis' in window) {
