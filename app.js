@@ -8,9 +8,9 @@ const AppStatus = {
 const els = {
   volumeValue: document.querySelector('#volumeValue'),
   volumeFill: document.querySelector('#volumeFill'),
-  thresholdInput: document.querySelector('#thresholdInput'),
   thresholdValue: document.querySelector('#thresholdValue'),
   thresholdLine: document.querySelector('#thresholdLine'),
+  meterTrack: document.querySelector('#meterTrack'),
   messageInput: document.querySelector('#messageInput'),
   speechToggle: document.querySelector('#speechToggle'),
   beepToggle: document.querySelector('#beepToggle'),
@@ -34,6 +34,7 @@ const state = {
   lastAlertAt: 0,
   voices: [],
   speechUnlocked: false,
+  threshold: 30,
 };
 
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
@@ -51,9 +52,16 @@ function showNote(message) {
 }
 
 function updateThreshold() {
-  const threshold = Number(els.thresholdInput.value);
-  els.thresholdValue.textContent = `${threshold}%`;
-  els.thresholdLine.style.left = `${threshold}%`;
+  els.thresholdValue.textContent = `${state.threshold}%`;
+  els.thresholdLine.style.left = `${state.threshold}%`;
+}
+
+function setThresholdFromPosition(clientX) {
+  const rect = els.meterTrack.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const percentage = Math.round((x / rect.width) * 100);
+  state.threshold = Math.min(100, Math.max(0, percentage));
+  updateThreshold();
 }
 
 function updateVolume(volume) {
@@ -130,8 +138,7 @@ function speakAlert() {
 }
 
 function maybeAlert(volume) {
-  const threshold = Number(els.thresholdInput.value);
-  const loud = volume >= threshold;
+  const loud = volume >= state.threshold;
 
   if (loud && !state.isLoud) {
     state.isLoud = true;
@@ -258,7 +265,48 @@ function handleVisibilityChange() {
   }
 }
 
-els.thresholdInput.addEventListener('input', updateThreshold);
+// Threshold control via meter track
+let isDragging = false;
+
+function handlePointerDown(e) {
+  isDragging = true;
+  els.meterTrack.setPointerCapture(e.pointerId);
+  setThresholdFromPosition(e.clientX);
+}
+
+function handlePointerMove(e) {
+  if (isDragging) {
+    setThresholdFromPosition(e.clientX);
+  }
+}
+
+function handlePointerUp(e) {
+  isDragging = false;
+  els.meterTrack.releasePointerCapture(e.pointerId);
+}
+
+els.meterTrack.addEventListener('pointerdown', handlePointerDown);
+els.meterTrack.addEventListener('pointermove', handlePointerMove);
+els.meterTrack.addEventListener('pointerup', handlePointerUp);
+els.meterTrack.addEventListener('pointercancel', handlePointerUp);
+
+// Touch fallback for older browsers
+els.meterTrack.addEventListener('touchstart', (e) => {
+  isDragging = true;
+  setThresholdFromPosition(e.touches[0].clientX);
+}, { passive: true });
+
+els.meterTrack.addEventListener('touchmove', (e) => {
+  if (isDragging) {
+    e.preventDefault();
+    setThresholdFromPosition(e.touches[0].clientX);
+  }
+}, { passive: false });
+
+els.meterTrack.addEventListener('touchend', () => {
+  isDragging = false;
+});
+
 els.startButton.addEventListener('click', () => {
   if (state.status === AppStatus.LISTENING || state.status === AppStatus.LOUD) {
     stopMonitoring();
