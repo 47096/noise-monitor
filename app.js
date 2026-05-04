@@ -76,12 +76,10 @@ function updateVolume(volume) {
 }
 
 function drawWaveform() {
-  if (!els.waveformCanvas || !state.analyser) return;
+  if (!els.waveformCanvas) return;
   
   const canvas = els.waveformCanvas;
   const ctx = canvas.getContext('2d');
-  const bufferLength = state.analyser.frequencyBinCount;
-  const dataArray = new Uint8Array(bufferLength);
   
   // Set canvas size for high DPI displays (only once, or when size changes)
   const dpr = window.devicePixelRatio || 1;
@@ -99,9 +97,23 @@ function drawWaveform() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(dpr, dpr);
   
-  state.analyser.getByteFrequencyData(dataArray);
-  
+  // Clear canvas
   ctx.clearRect(0, 0, displayWidth, displayHeight);
+  
+  // If no analyser, draw a flat line (idle state)
+  if (!state.analyser) {
+    ctx.beginPath();
+    ctx.moveTo(0, displayHeight / 2);
+    ctx.lineTo(displayWidth, displayHeight / 2);
+    ctx.strokeStyle = '#a5b4fc';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    return;
+  }
+  
+  const bufferLength = state.analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+  state.analyser.getByteFrequencyData(dataArray);
   
   const barWidth = (displayWidth / bufferLength) * 2.5;
   let x = 0;
@@ -252,6 +264,7 @@ function stopMonitoring() {
   els.startButton.classList.remove('stop');
   els.startButton.querySelector('.button-icon').textContent = '▶';
   els.startButton.querySelector('span:last-child').textContent = 'Start';
+  drawWaveform();
 }
 
 async function startMonitoring() {
@@ -452,3 +465,4 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 
 updateThreshold();
 updateVolume(0);
+drawWaveform();
