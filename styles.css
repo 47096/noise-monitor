@@ -170,6 +170,23 @@ p {
   background: #f8fafc;
 }
 
+.current-level-indicator {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--indigo);
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: var(--indigo-soft);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.current-level-indicator span {
+  font-weight: 800;
+  font-size: 1.25rem;
+}
+
 .threshold-label {
   display: block;
   font-size: 1rem;
