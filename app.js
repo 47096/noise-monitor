@@ -10,6 +10,7 @@ const els = {
   permissionNote: document.querySelector('#permissionNote'),
   thresholdSlider: document.querySelector('#thresholdSlider'),
   thresholdValue: document.querySelector('#thresholdValue'),
+  currentLevel: document.querySelector('#currentLevel'),
   messageInput: document.querySelector('#messageInput'),
   speechToggle: document.querySelector('#speechToggle'),
   beepToggle: document.querySelector('#beepToggle'),
@@ -57,8 +58,30 @@ function updateThreshold() {
 }
 
 function updateVolume(volume) {
-  // Volume is now monitored via the slider position
-  // This function can be used for future visual feedback if needed
+  // Update the current noise level display
+  if (els.currentLevel) {
+    els.currentLevel.textContent = Math.round(volume);
+  }
+  
+  // Update background color based on noise level relative to threshold
+  const indicator = document.querySelector('.current-level-indicator');
+  if (indicator) {
+    const percentage = volume / state.threshold;
+    
+    if (percentage >= 1) {
+      // At or above threshold - danger zone (red)
+      indicator.style.backgroundColor = 'var(--red-soft)';
+      indicator.style.color = 'var(--red)';
+    } else if (percentage >= 0.7) {
+      // Approaching threshold - warning zone (amber)
+      indicator.style.backgroundColor = 'var(--amber-soft)';
+      indicator.style.color = 'var(--amber)';
+    } else {
+      // Safe zone (green/indigo)
+      indicator.style.backgroundColor = 'var(--green-soft)';
+      indicator.style.color = 'var(--green)';
+    }
+  }
 }
 
 function loadVoices() {
@@ -164,6 +187,7 @@ function analyze() {
   const nextVolume = Math.min(100, (rms / 0.16) * 100);
   state.volume = state.volume * 0.72 + nextVolume * 0.28;
 
+  updateVolume(state.volume);
   maybeAlert(state.volume);
   state.frame = requestAnimationFrame(analyze);
 }
