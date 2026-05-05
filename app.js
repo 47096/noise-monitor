@@ -177,9 +177,15 @@ function updateVolume(volume) {
   drawWaveform();
 }
 
+let voicesLoaded = false;
+
 function loadVoices() {
   if (!('speechSynthesis' in window)) return;
   state.voices = window.speechSynthesis.getVoices();
+  // Mark voices as loaded once we have them
+  if (state.voices && state.voices.length > 0) {
+    voicesLoaded = true;
+  }
 }
 
 function unlockSpeech() {
@@ -189,6 +195,18 @@ function unlockSpeech() {
     const utterance = new SpeechSynthesisUtterance(' ');
     utterance.volume = 0.01;
     utterance.rate = 1;
+    // Wait for voices to be loaded on Chrome
+    if (!voicesLoaded) {
+      window.speechSynthesis.addEventListener('voiceschanged', () => {
+        loadVoices();
+        const silentUtterance = new SpeechSynthesisUtterance(' ');
+        silentUtterance.volume = 0.01;
+        window.speechSynthesis.speak(silentUtterance);
+        window.speechSynthesis.cancel();
+        state.speechUnlocked = true;
+      }, { once: true });
+      return;
+    }
     window.speechSynthesis.speak(utterance);
     window.speechSynthesis.cancel();
     state.speechUnlocked = true;
@@ -224,6 +242,16 @@ function speakAlert() {
   const message = els.alertMessageInput?.value?.trim() || 'Quiet';
 
   if (!('speechSynthesis' in window)) {
+    return;
+  }
+
+  // Ensure voices are loaded before speaking (critical for Chrome)
+  if (!voicesLoaded && state.voices.length === 0) {
+    // Voices haven't loaded yet, wait for them
+    window.speechSynthesis.addEventListener('voiceschanged', () => {
+      loadVoices();
+      speakAlert();
+    }, { once: true });
     return;
   }
 
