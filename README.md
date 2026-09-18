@@ -150,7 +150,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ## 🙏 Acknowledgments
 
-- Inspired by [`wsamuelw/noise-monitor`](https://github.com/wsamuelw/noise-monitor)
+- Inspired by [`47096/noise-monitor`](https://github.com/47096/noise-monitor)
 - Built with ❤️ using vanilla web technologies
 
 ## 📞 Support
