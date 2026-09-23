@@ -23,17 +23,28 @@
           </div>
           <div>
             <h1 id="app-title">Noise Monitor</h1>
-            <p>Adjust the slider for noise sensitivity.</p>
+            <p>Live level on top. Set the alert threshold below.</p>
           </div>
         </header>
 
-        <div class="threshold-slider-wrap">
-          <label for="thresholdSlider" class="threshold-label">Noise Level: <span id="thresholdValue">30</span></label>
+        <div class="level-panel">
+          <div class="live-level">
+            <span class="live-level-label">Level</span>
+            <span class="volume-number" id="volumeNumber">0</span>
+            <span class="unit">/ 100</span>
+          </div>
           <canvas id="waveformChart" class="waveform-chart" aria-hidden="true"></canvas>
+          <div class="live-meter" aria-hidden="true">
+            <div class="live-meter-fill" id="trackFill"></div>
+          </div>
+        </div>
+
+        <div class="threshold-slider-wrap">
+          <label for="thresholdSlider" class="threshold-label">Alert at: <span id="thresholdValue">30</span></label>
           <div class="slider-track-container">
             <div class="slider-track-bg"></div>
-            <div class="slider-track-fill" id="trackFill"></div>
-            <input type="range" id="thresholdSlider" class="threshold-slider" min="0" max="100" value="30">
+            <div class="slider-track-fill" id="thresholdFill"></div>
+            <input type="range" id="thresholdSlider" class="threshold-slider" min="1" max="100" value="30">
           </div>
         </div>
 

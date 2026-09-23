@@ -107,19 +107,6 @@ p {
   font-weight: 600;
 }
 
-.volume-number {
-  line-height: 0.86;
-  font-weight: 800;
-  font-size: clamp(4rem, 22vw, 6.5rem);
-  letter-spacing: 0;
-  display: none;
-}
-
-.unit {
-  font-size: 0.34em;
-  color: var(--muted);
-}
-
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -163,25 +150,87 @@ p {
   animation: pulse 1.15s infinite;
 }
 
-.threshold-slider-wrap {
+.level-panel {
   margin-top: 24px;
   padding: 16px;
   border-radius: 20px;
   background: #f8fafc;
   position: relative;
+  min-height: 148px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+.live-level {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  z-index: 2;
+}
+
+.live-level-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.volume-number {
+  line-height: 0.86;
+  font-weight: 800;
+  font-size: clamp(3rem, 16vw, 4.5rem);
+  letter-spacing: 0;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.unit {
+  font-size: 1rem;
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .waveform-chart {
   position: absolute;
-  top: 50%;
+  top: 8px;
   left: 0;
   right: 0;
   width: 100%;
   height: 80px;
-  transform: translateY(-50%);
   z-index: 0;
-  opacity: 0.3;
+  opacity: 0.28;
   pointer-events: none;
+}
+
+.live-meter {
+  position: relative;
+  z-index: 2;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--track);
+  border: 1px solid rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+}
+
+.live-meter-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: var(--green);
+  transition: width 0.1s ease, background 0.2s ease;
+}
+
+.threshold-slider-wrap {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #f8fafc;
+  position: relative;
 }
 
 .slider-track-container {
@@ -207,7 +256,7 @@ p {
   left: 0;
   height: 12px;
   border-radius: 999px;
-  background: linear-gradient(to right, var(--green), var(--amber), var(--red));
+  background: var(--indigo);
   z-index: 2;
   pointer-events: none;
   transition: width 0.1s ease, background 0.2s ease;

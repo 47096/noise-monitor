@@ -11,6 +11,8 @@ const els = {
   thresholdSlider: document.querySelector('#thresholdSlider'),
   thresholdValue: document.querySelector('#thresholdValue'),
   trackFill: document.querySelector('#trackFill'),
+  thresholdFill: document.querySelector('#thresholdFill'),
+  volumeNumber: document.querySelector('#volumeNumber'),
   alertMessageInput: document.querySelector('#alertMessage'),
   waveformChart: document.querySelector('#waveformChart'),
 };
@@ -49,13 +51,14 @@ function showNote(message) {
 }
 
 function updateThreshold() {
-  // Update the threshold value display
   if (els.thresholdValue) {
     els.thresholdValue.textContent = state.threshold;
   }
-  // Update the slider value
   if (els.thresholdSlider) {
     els.thresholdSlider.value = state.threshold;
+  }
+  if (els.thresholdFill) {
+    els.thresholdFill.style.width = `${state.threshold}%`;
   }
 }
 
@@ -93,7 +96,7 @@ function drawWaveform() {
   
   // Create gradient based on current volume vs threshold
   const gradient = ctx.createLinearGradient(0, 0, 0, height);
-  const percentage = state.volume / state.threshold;
+  const percentage = state.threshold > 0 ? state.volume / state.threshold : Infinity;
   
   if (percentage >= 1) {
     gradient.addColorStop(0, 'rgba(244, 63, 94, 0.8)');
@@ -154,26 +157,24 @@ function drawWaveform() {
 }
 
 function updateVolume(volume) {
-  // Update the progress bar in the slider track
+  const level = Math.min(100, Math.max(0, volume));
+  const ratio = state.threshold > 0 ? level / state.threshold : Infinity;
+
+  if (els.volumeNumber) {
+    els.volumeNumber.textContent = String(Math.round(level));
+  }
+
   if (els.trackFill) {
-    els.trackFill.style.width = `${Math.min(100, volume)}%`;
-    
-    // Update background color based on noise level relative to threshold
-    const percentage = volume / state.threshold;
-    
-    if (percentage >= 1) {
-      // At or above threshold - danger zone (red)
+    els.trackFill.style.width = `${level}%`;
+    if (ratio >= 1) {
       els.trackFill.style.background = 'var(--red)';
-    } else if (percentage >= 0.7) {
-      // Approaching threshold - warning zone (amber)
+    } else if (ratio >= 0.7) {
       els.trackFill.style.background = 'var(--amber)';
     } else {
-      // Safe zone (green)
       els.trackFill.style.background = 'var(--green)';
     }
   }
-  
-  // Draw waveform visualization
+
   drawWaveform();
 }
 
@@ -374,6 +375,7 @@ function stopMonitoring() {
   state.buffer = null;
   state.volume = 0;
   state.isLoud = false;
+  updateVolume(0);
 
   // Clear the waveform chart
   if (state.chartCtx && els.waveformChart) {
@@ -452,38 +454,45 @@ function handleVisibilityChange() {
   }
 }
 
-// Threshold slider event listener
-function handleSliderInput(e) {
-  state.threshold = parseInt(e.target.value, 10);
-  updateThreshold();
-}
-
-// Alert message input event listener
-function handleMessageInput(e) {
-  // Save to localStorage for persistence
+function saveSetting(key, value) {
   try {
-    localStorage.setItem('alertMessage', e.target.value);
+    localStorage.setItem(key, value);
   } catch {
     // Ignore localStorage errors
   }
 }
 
-// Initialize slider event listener
+function loadSetting(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function handleSliderInput(e) {
+  state.threshold = Math.max(1, parseInt(e.target.value, 10) || 1);
+  updateThreshold();
+  saveSetting('threshold', String(state.threshold));
+}
+
+function handleMessageInput(e) {
+  saveSetting('alertMessage', e.target.value);
+}
+
 if (els.thresholdSlider) {
+  const savedThreshold = parseInt(loadSetting('threshold') || '', 10);
+  if (Number.isFinite(savedThreshold)) {
+    state.threshold = Math.min(100, Math.max(1, savedThreshold));
+  }
   els.thresholdSlider.addEventListener('input', handleSliderInput);
 }
 
-// Initialize message input event listener
 if (els.alertMessageInput) {
   els.alertMessageInput.addEventListener('input', handleMessageInput);
-  // Load saved message from localStorage
-  try {
-    const savedMessage = localStorage.getItem('alertMessage');
-    if (savedMessage) {
-      els.alertMessageInput.value = savedMessage;
-    }
-  } catch {
-    // Ignore localStorage errors
+  const savedMessage = loadSetting('alertMessage');
+  if (savedMessage) {
+    els.alertMessageInput.value = savedMessage;
   }
 }
 
@@ -507,3 +516,4 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 }
 
 updateThreshold();
+updateVolume(0);
