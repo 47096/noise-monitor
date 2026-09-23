@@ -13,6 +13,8 @@ const els = {
   trackFill: document.querySelector('#trackFill'),
   thresholdFill: document.querySelector('#thresholdFill'),
   volumeNumber: document.querySelector('#volumeNumber'),
+  statusPill: document.querySelector('#statusPill'),
+  statusText: document.querySelector('#statusText'),
   alertMessageInput: document.querySelector('#alertMessage'),
   waveformChart: document.querySelector('#waveformChart'),
 };
@@ -42,6 +44,23 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
 function setStatus(status, text) {
   state.status = status;
+
+  if (els.statusPill) {
+    els.statusPill.className = `status-pill ${status}`;
+  }
+  if (els.statusText) {
+    els.statusText.textContent = text || status;
+  }
+
+  const isLoud = status === AppStatus.LOUD;
+  document.body.classList.toggle('is-loud', isLoud);
+  document.querySelector('.monitor')?.classList.toggle('is-loud', isLoud);
+}
+
+function pulseHaptic() {
+  if (typeof navigator.vibrate === 'function') {
+    navigator.vibrate([140, 70, 140]);
+  }
 }
 
 function showNote(message) {
@@ -328,6 +347,7 @@ function maybeAlert(volume) {
   if (loud && !state.isLoud) {
     state.isLoud = true;
     setStatus(AppStatus.LOUD, 'Too loud');
+    pulseHaptic();
     speakAlert();
   } else if (!loud && state.isLoud) {
     state.isLoud = false;
