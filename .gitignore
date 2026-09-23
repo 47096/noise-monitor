@@ -12,11 +12,16 @@ __pycache__/
 
 # Dependencies
 node_modules/
+package-lock.json
 venv/
 .venv/
 .env
 .env.local
 .env.*
+
+# Local design scraps
+design-qa.md
+generated-*.png
 
 # Logs and temp files
 *.log

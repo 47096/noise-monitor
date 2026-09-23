@@ -34,7 +34,7 @@ Live: **https://47096.github.io/noise-monitor/**
 ```bash
 python3 -m http.server 8080
 # or
-npx http-server -p 8080
+npx --yes http-server -p 8080
 # or
 php -S localhost:8080
 ```
@@ -70,8 +70,6 @@ noise-monitor/
 ├── sw.js            # Service worker (offline + cache revalidate)
 ├── manifest.json    # PWA manifest
 ├── icon.svg         # App icon
-├── package.json     # Optional local static server
-├── design-qa.md     # Design fidelity notes
 └── README.md
 ```
 
