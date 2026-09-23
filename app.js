@@ -16,6 +16,8 @@ const els = {
   statusPill: document.querySelector('#statusPill'),
   statusText: document.querySelector('#statusText'),
   alertMessageInput: document.querySelector('#alertMessage'),
+  soundToggle: document.querySelector('#soundToggle'),
+  speakToggle: document.querySelector('#speakToggle'),
   waveformChart: document.querySelector('#waveformChart'),
 };
 
@@ -32,6 +34,8 @@ const state = {
   voices: [],
   speechUnlocked: false,
   threshold: 30,
+  soundEnabled: true,
+  speakEnabled: true,
   animationId: null,
   waveformHistory: [],
   chartCtx: null,
@@ -340,15 +344,26 @@ function getBestVoice() {
   return null;
 }
 
+function fireAlert() {
+  if (state.soundEnabled) {
+    playBeep();
+  }
+  if (state.speakEnabled) {
+    // Let the chime land first when both are on
+    const delay = state.soundEnabled ? 360 : 0;
+    window.setTimeout(speakAlert, delay);
+  }
+}
+
 function maybeAlert(volume) {
   const loud = volume >= state.threshold;
 
-  // Rising edge only: speak once when noise crosses the threshold
+  // Rising edge only: alert once when noise crosses the threshold
   if (loud && !state.isLoud) {
     state.isLoud = true;
     setStatus(AppStatus.LOUD, 'Too loud');
     pulseHaptic();
-    speakAlert();
+    fireAlert();
   } else if (!loud && state.isLoud) {
     state.isLoud = false;
     setStatus(AppStatus.LISTENING, 'Monitoring');
@@ -499,6 +514,16 @@ function handleMessageInput(e) {
   saveSetting('alertMessage', e.target.value);
 }
 
+function handleSoundToggle(e) {
+  state.soundEnabled = e.target.checked;
+  saveSetting('soundEnabled', state.soundEnabled ? '1' : '0');
+}
+
+function handleSpeakToggle(e) {
+  state.speakEnabled = e.target.checked;
+  saveSetting('speakEnabled', state.speakEnabled ? '1' : '0');
+}
+
 if (els.thresholdSlider) {
   const savedThreshold = parseInt(loadSetting('threshold') || '', 10);
   if (Number.isFinite(savedThreshold)) {
@@ -513,6 +538,24 @@ if (els.alertMessageInput) {
   if (savedMessage) {
     els.alertMessageInput.value = savedMessage;
   }
+}
+
+if (els.soundToggle) {
+  const savedSound = loadSetting('soundEnabled');
+  if (savedSound !== null) {
+    state.soundEnabled = savedSound === '1';
+    els.soundToggle.checked = state.soundEnabled;
+  }
+  els.soundToggle.addEventListener('change', handleSoundToggle);
+}
+
+if (els.speakToggle) {
+  const savedSpeak = loadSetting('speakEnabled');
+  if (savedSpeak !== null) {
+    state.speakEnabled = savedSpeak === '1';
+    els.speakToggle.checked = state.speakEnabled;
+  }
+  els.speakToggle.addEventListener('change', handleSpeakToggle);
 }
 
 els.startButton.addEventListener('click', () => {

@@ -58,6 +58,18 @@
         <div class="message-input-wrap">
           <label for="alertMessage" class="message-label">Personalised Message</label>
           <input type="text" id="alertMessage" class="alert-message-input" value="Quiet" placeholder="Enter Message">
+          <div class="toggle-row" role="group" aria-label="Alert style">
+            <label class="switch" for="soundToggle">
+              <input type="checkbox" id="soundToggle" checked>
+              <span class="switch-ui" aria-hidden="true"></span>
+              <span>Sound</span>
+            </label>
+            <label class="switch" for="speakToggle">
+              <input type="checkbox" id="speakToggle" checked>
+              <span class="switch-ui" aria-hidden="true"></span>
+              <span>Speak</span>
+            </label>
+          </div>
         </div>
 
         <div id="permissionNote" class="permission-note" hidden></div>

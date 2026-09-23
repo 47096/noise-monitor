@@ -457,6 +457,7 @@ body.is-loud {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin-top: 14px;
 }
 
 .switch {
@@ -467,8 +468,10 @@ body.is-loud {
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 16px;
-  background: #f8fafc;
+  background: white;
   font-weight: 750;
+  cursor: pointer;
+  user-select: none;
 }
 
 .switch input {
