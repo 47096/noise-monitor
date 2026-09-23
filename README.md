@@ -69,7 +69,9 @@ noise-monitor/
 ├── app.js           # Mic analysis, alerts, persistence
 ├── sw.js            # Service worker (offline + cache revalidate)
 ├── manifest.json    # PWA manifest
-├── icon.svg         # App icon
+├── icon.svg         # App icon (ember orb)
+├── icon-512.png     # PWA raster icon
+├── apple-touch-icon.png
 └── README.md
 ```
 

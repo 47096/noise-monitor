@@ -1,4 +1,4 @@
-const CACHE_NAME = 'noise-monitor-ember-v7';
+const CACHE_NAME = 'noise-monitor-ember-v8';
 const ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,8 @@ const ASSETS = [
   './app.js',
   './manifest.json',
   './icon.svg',
+  './icon-512.png',
+  './apple-touch-icon.png',
 ];
 const APP_SHELL = './index.html';
 
