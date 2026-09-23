@@ -30,6 +30,9 @@ const state = {
   source: null,
   frame: 0,
   buffer: null,
+  byteBuffer: null,
+  silentGain: null,
+  sampleTimer: null,
   volume: 0,
   isLoud: false,
   speaking: false,
@@ -315,10 +318,14 @@ function speakAlert() {
       resumeAudio();
     };
 
-    // Safety: onend is unreliable on some iOS versions
+    // onend is unreliable on iOS — free the channel from message length
+    const estimateMs = Math.min(12000, 1200 + message.length * 70);
     window.setTimeout(() => {
       if (state.speaking) done();
-    }, 14000);
+    }, estimateMs);
+
+    // iOS only reliably speaks the first utterance unless we reset first
+    window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(message);
     utterance.onend = done;
@@ -335,6 +342,15 @@ function speakAlert() {
     utterance.rate = 0.92;
     utterance.pitch = 1.02;
     window.speechSynthesis.speak(utterance);
+
+    // Some iOS builds need a nudge after queueing
+    window.setTimeout(() => {
+      try {
+        window.speechSynthesis.resume();
+      } catch {
+        // ignore
+      }
+    }, 50);
   } catch {
     state.speaking = false;
   }
@@ -419,29 +435,52 @@ function maybeAlert(volume) {
   }
 }
 
+function readLevel() {
+  if (!state.analyser) return;
+
+  const size = state.analyser.fftSize;
+  let rms = 0;
+
+  try {
+    if (typeof state.analyser.getFloatTimeDomainData === 'function') {
+      if (!state.buffer || state.buffer.length !== size) {
+        state.buffer = new Float32Array(size);
+      }
+      state.analyser.getFloatTimeDomainData(state.buffer);
+      let sum = 0;
+      for (let i = 0; i < state.buffer.length; i += 1) {
+        sum += state.buffer[i] * state.buffer[i];
+      }
+      rms = Math.sqrt(sum / state.buffer.length);
+    } else {
+      throw new Error('no-float');
+    }
+  } catch {
+    // Older iOS: byte time domain is the reliable path
+    if (!state.byteBuffer || state.byteBuffer.length !== size) {
+      state.byteBuffer = new Uint8Array(size);
+    }
+    state.analyser.getByteTimeDomainData(state.byteBuffer);
+    let sum = 0;
+    for (let i = 0; i < state.byteBuffer.length; i += 1) {
+      const sample = (state.byteBuffer[i] - 128) / 128;
+      sum += sample * sample;
+    }
+    rms = Math.sqrt(sum / state.byteBuffer.length);
+  }
+
+  const nextVolume = Math.min(100, (rms / 0.16) * 100);
+  state.volume = state.volume * 0.72 + nextVolume * 0.28;
+  updateVolume(state.volume);
+  maybeAlert(state.volume);
+}
+
 function analyze() {
   if (!state.analyser) return;
 
   try {
     resumeAudio();
-
-    if (!state.buffer || state.buffer.length !== state.analyser.fftSize) {
-      state.buffer = new Float32Array(state.analyser.fftSize);
-    }
-
-    state.analyser.getFloatTimeDomainData(state.buffer);
-
-    let sum = 0;
-    for (let i = 0; i < state.buffer.length; i += 1) {
-      sum += state.buffer[i] * state.buffer[i];
-    }
-
-    const rms = Math.sqrt(sum / state.buffer.length);
-    const nextVolume = Math.min(100, (rms / 0.16) * 100);
-    state.volume = state.volume * 0.72 + nextVolume * 0.28;
-
-    updateVolume(state.volume);
-    maybeAlert(state.volume);
+    readLevel();
   } catch {
     // Keep the monitor loop alive even if a frame fails (iOS interruptions)
   } finally {
@@ -451,10 +490,34 @@ function analyze() {
   }
 }
 
+function startSampleTimer() {
+  stopSampleTimer();
+  // rAF can stall on iOS; sample on a timer too
+  state.sampleTimer = window.setInterval(() => {
+    if (state.analyser && document.visibilityState !== 'hidden') {
+      try {
+        resumeAudio();
+        readLevel();
+      } catch {
+        // ignore
+      }
+    }
+  }, 100);
+}
+
+function stopSampleTimer() {
+  if (state.sampleTimer) {
+    window.clearInterval(state.sampleTimer);
+    state.sampleTimer = null;
+  }
+}
+
 function stopMonitoring() {
   if (state.frame) cancelAnimationFrame(state.frame);
+  stopSampleTimer();
   if (state.stream) state.stream.getTracks().forEach((track) => track.stop());
   if (state.source) state.source.disconnect();
+  if (state.silentGain) state.silentGain.disconnect();
   if (state.analyser) state.analyser.disconnect();
   if (state.audioContext && state.audioContext.state !== 'closed') state.audioContext.close();
   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -463,6 +526,7 @@ function stopMonitoring() {
   state.analyser = null;
   state.stream = null;
   state.source = null;
+  state.silentGain = null;
   state.frame = 0;
   state.buffer = null;
   state.volume = 0;
@@ -523,13 +587,20 @@ async function startMonitoring() {
     state.analyser.fftSize = isIOS ? 1024 : 2048;
     state.analyser.smoothingTimeConstant = 0.2;
     state.source = state.audioContext.createMediaStreamSource(state.stream);
+
+    // iOS will not process the graph unless it reaches the destination
+    state.silentGain = state.audioContext.createGain();
+    state.silentGain.gain.value = 0;
     state.source.connect(state.analyser);
+    state.analyser.connect(state.silentGain);
+    state.silentGain.connect(state.audioContext.destination);
 
     setStatus(AppStatus.LISTENING, 'Monitoring');
     els.startButton.classList.add('stop');
     els.startButton.querySelector('.button-icon').innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
     els.startButton.querySelector('span:last-child').textContent = 'Stop monitoring';
     state.frame = requestAnimationFrame(analyze);
+    startSampleTimer();
   } catch (error) {
     stopMonitoring();
     setStatus(AppStatus.ERROR, 'Mic blocked');
@@ -553,6 +624,9 @@ function handleVisibilityChange() {
     // rAF is frozen while hidden — restart the monitor loop
     if (state.analyser && !state.frame) {
       state.frame = requestAnimationFrame(analyze);
+    }
+    if (state.analyser) {
+      startSampleTimer();
     }
   }
 }
