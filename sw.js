@@ -1,4 +1,4 @@
-const CACHE_NAME = 'noise-monitor-mobile-v2';
+const CACHE_NAME = 'noise-monitor-ember-v3';
 const ASSETS = [
   './',
   './index.html',

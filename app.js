@@ -19,6 +19,7 @@ const els = {
   soundToggle: document.querySelector('#soundToggle'),
   speakToggle: document.querySelector('#speakToggle'),
   waveformChart: document.querySelector('#waveformChart'),
+  levelWord: document.querySelector('#levelWord'),
 };
 
 const state = {
@@ -145,74 +146,38 @@ function handleChartResize() {
 
 function drawWaveform() {
   if (!state.chartCtx || !els.waveformChart) return;
-  
+
   const ctx = state.chartCtx;
   const width = state.chartWidth;
   const height = state.chartHeight;
-  
-  // Clear canvas
+
   ctx.clearRect(0, 0, width, height);
-  
-  // Create gradient based on current volume vs threshold
-  const gradient = ctx.createLinearGradient(0, 0, 0, height);
-  const percentage = state.threshold > 0 ? state.volume / state.threshold : Infinity;
-  
-  if (percentage >= 1) {
-    gradient.addColorStop(0, 'rgba(244, 63, 94, 0.8)');
-    gradient.addColorStop(1, 'rgba(244, 63, 94, 0.2)');
-  } else if (percentage >= 0.7) {
-    gradient.addColorStop(0, 'rgba(217, 119, 6, 0.8)');
-    gradient.addColorStop(1, 'rgba(217, 119, 6, 0.2)');
-  } else {
-    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.8)');
-    gradient.addColorStop(1, 'rgba(16, 185, 129, 0.2)');
-  }
-  
-  // Add current volume to history
+
+  const ratio = state.threshold > 0 ? state.volume / state.threshold : Infinity;
   state.waveformHistory.push(state.volume);
   state.waveformHistory.shift();
-  
-  // Draw the waveform line
-  ctx.beginPath();
-  ctx.strokeStyle = gradient;
-  ctx.lineWidth = 2;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  
-  const step = width / state.waveformHistory.length;
-  
-  for (let i = 0; i < state.waveformHistory.length; i++) {
-    const x = i * step;
-    const y = height / 2 - (state.waveformHistory[i] / 100) * (height / 2 - 4);
-    
-    if (i === 0) {
-      ctx.moveTo(x, y);
+
+  const barCount = state.waveformHistory.length;
+  const gap = 2;
+  const barWidth = Math.max(1, width / barCount - gap);
+  const mid = height / 2;
+
+  for (let i = 0; i < barCount; i++) {
+    const value = state.waveformHistory[i];
+    const amp = Math.max(2, (value / 100) * (height - 8));
+    const x = i * (barWidth + gap);
+    const y = mid - amp / 2;
+
+    if (ratio >= 1) {
+      ctx.fillStyle = 'rgba(224, 112, 112, 0.9)';
+    } else if (ratio >= 0.7) {
+      ctx.fillStyle = 'rgba(224, 154, 106, 0.85)';
     } else {
-      ctx.lineTo(x, y);
+      ctx.fillStyle = 'rgba(255, 170, 110, 0.75)';
     }
+
+    ctx.fillRect(x, y, barWidth, amp);
   }
-  
-  ctx.stroke();
-  
-  // Draw filled area below the line
-  ctx.lineTo(width, height);
-  ctx.lineTo(0, height);
-  ctx.closePath();
-  
-  const fillGradient = ctx.createLinearGradient(0, 0, 0, height);
-  if (percentage >= 1) {
-    fillGradient.addColorStop(0, 'rgba(244, 63, 94, 0.3)');
-    fillGradient.addColorStop(1, 'rgba(244, 63, 94, 0.05)');
-  } else if (percentage >= 0.7) {
-    fillGradient.addColorStop(0, 'rgba(217, 119, 6, 0.3)');
-    fillGradient.addColorStop(1, 'rgba(217, 119, 6, 0.05)');
-  } else {
-    fillGradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
-    fillGradient.addColorStop(1, 'rgba(16, 185, 129, 0.05)');
-  }
-  
-  ctx.fillStyle = fillGradient;
-  ctx.fill();
 }
 
 function updateVolume(volume) {
@@ -223,6 +188,16 @@ function updateVolume(volume) {
     els.volumeNumber.textContent = String(Math.round(level));
   }
 
+  if (els.levelWord) {
+    if (ratio >= 1) {
+      els.levelWord.textContent = 'Too loud';
+    } else if (ratio >= 0.7) {
+      els.levelWord.textContent = 'Getting loud';
+    } else {
+      els.levelWord.textContent = 'Quiet';
+    }
+  }
+
   if (els.trackFill) {
     els.trackFill.style.width = `${level}%`;
     if (ratio >= 1) {
@@ -230,7 +205,7 @@ function updateVolume(volume) {
     } else if (ratio >= 0.7) {
       els.trackFill.style.background = 'var(--amber)';
     } else {
-      els.trackFill.style.background = 'var(--green)';
+      els.trackFill.style.background = 'var(--ember)';
     }
   }
 
@@ -455,8 +430,8 @@ function stopMonitoring() {
 
   setStatus(AppStatus.IDLE, 'Ready');
   els.startButton.classList.remove('stop');
-  els.startButton.querySelector('.button-icon').textContent = '▶';
-  els.startButton.querySelector('span:last-child').textContent = 'Start';
+  els.startButton.querySelector('.button-icon').innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>';
+  els.startButton.querySelector('span:last-child').textContent = 'Start monitoring';
 }
 
 async function startMonitoring() {
@@ -502,8 +477,8 @@ async function startMonitoring() {
 
     setStatus(AppStatus.LISTENING, 'Monitoring');
     els.startButton.classList.add('stop');
-    els.startButton.querySelector('.button-icon').textContent = '■';
-    els.startButton.querySelector('span:last-child').textContent = 'Stop';
+    els.startButton.querySelector('.button-icon').innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+    els.startButton.querySelector('span:last-child').textContent = 'Stop monitoring';
     state.frame = requestAnimationFrame(analyze);
   } catch (error) {
     stopMonitoring();
