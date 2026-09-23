@@ -27,7 +27,6 @@ const state = {
   buffer: null,
   volume: 0,
   isLoud: false,
-  lastAlertAt: 0,
   voices: [],
   speechUnlocked: false,
   threshold: 30,
@@ -257,9 +256,13 @@ function speakAlert() {
   }
 
   try {
-    window.speechSynthesis.cancel();
+    // Never cancel in-flight speech — long messages must finish
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      return;
+    }
+
     const utterance = new SpeechSynthesisUtterance(message);
-    
+
     // Smart voice selection for best cross-platform compatibility
     const preferredVoice = getBestVoice();
     if (preferredVoice) {
@@ -268,7 +271,7 @@ function speakAlert() {
     } else {
       utterance.lang = 'en-US';
     }
-    
+
     utterance.rate = 0.92;
     utterance.pitch = 1.02;
     window.speechSynthesis.speak(utterance);
@@ -321,18 +324,14 @@ function getBestVoice() {
 function maybeAlert(volume) {
   const loud = volume >= state.threshold;
 
+  // Rising edge only: speak once when noise crosses the threshold
   if (loud && !state.isLoud) {
     state.isLoud = true;
     setStatus(AppStatus.LOUD, 'Too loud');
+    speakAlert();
   } else if (!loud && state.isLoud) {
     state.isLoud = false;
     setStatus(AppStatus.LISTENING, 'Monitoring');
-  }
-
-  const now = Date.now();
-  if (loud && now - state.lastAlertAt > 2600) {
-    state.lastAlertAt = now;
-    speakAlert();
   }
 }
 
