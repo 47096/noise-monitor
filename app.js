@@ -32,6 +32,8 @@ const state = {
   buffer: null,
   volume: 0,
   isLoud: false,
+  speaking: false,
+  lastAlertAt: 0,
   voices: [],
   speechUnlocked: false,
   threshold: 30,
@@ -223,54 +225,65 @@ function loadVoices() {
   }
 }
 
+function resumeAudio() {
+  if (
+    state.audioContext
+    && state.audioContext.state !== 'closed'
+    && state.audioContext.state !== 'running'
+  ) {
+    state.audioContext.resume().catch(() => {});
+  }
+}
+
 function unlockSpeech() {
   if (!('speechSynthesis' in window)) return;
 
   try {
+    loadVoices();
+    // Tiny utterance unlocks iOS speech; do not cancel immediately (breaks some WebViews)
     const utterance = new SpeechSynthesisUtterance(' ');
-    utterance.volume = 0.01;
-    utterance.rate = 1;
-    // Wait for voices to be loaded on Chrome
-    if (!voicesLoaded) {
-      window.speechSynthesis.addEventListener('voiceschanged', () => {
-        loadVoices();
-        const silentUtterance = new SpeechSynthesisUtterance(' ');
-        silentUtterance.volume = 0.01;
-        window.speechSynthesis.speak(silentUtterance);
-        window.speechSynthesis.cancel();
-        state.speechUnlocked = true;
-      }, { once: true });
-      return;
-    }
+    utterance.volume = 0;
+    utterance.rate = 2;
+    utterance.onend = () => {
+      state.speechUnlocked = true;
+    };
     window.speechSynthesis.speak(utterance);
-    window.speechSynthesis.cancel();
     state.speechUnlocked = true;
   } catch {
     state.speechUnlocked = false;
   }
 }
 
+let beepContext = null;
+
 function playBeep() {
-  if (!state.audioContext || state.audioContext.state === 'closed') return;
+  // Separate context so the chime cannot interrupt the mic analyser on iOS
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!beepContext || beepContext.state === 'closed') {
+      beepContext = new AudioContextClass();
+    }
+    if (beepContext.state === 'suspended') {
+      beepContext.resume().catch(() => {});
+    }
 
-  if (state.audioContext.state === 'suspended') {
-    state.audioContext.resume().catch(() => {});
+    const now = beepContext.currentTime;
+    const osc = beepContext.createOscillator();
+    const gain = beepContext.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, now);
+    osc.frequency.exponentialRampToValueAtTime(660, now + 0.28);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.36, now + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.36);
+
+    osc.connect(gain).connect(beepContext.destination);
+    osc.start(now);
+    osc.stop(now + 0.38);
+  } catch {
+    // Chime is best-effort
   }
-
-  const now = state.audioContext.currentTime;
-  const osc = state.audioContext.createOscillator();
-  const gain = state.audioContext.createGain();
-
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(880, now);
-  osc.frequency.exponentialRampToValueAtTime(660, now + 0.28);
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.36, now + 0.03);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.36);
-
-  osc.connect(gain).connect(state.audioContext.destination);
-  osc.start(now);
-  osc.stop(now + 0.38);
 }
 
 function speakAlert() {
@@ -282,7 +295,6 @@ function speakAlert() {
 
   // Ensure voices are loaded before speaking (critical for Chrome)
   if (!voicesLoaded && state.voices.length === 0) {
-    // Voices haven't loaded yet, wait for them
     window.speechSynthesis.addEventListener('voiceschanged', () => {
       loadVoices();
       speakAlert();
@@ -290,15 +302,28 @@ function speakAlert() {
     return;
   }
 
+  // Track speaking ourselves — speechSynthesis.speaking sticks true on iOS
+  if (state.speaking) {
+    return;
+  }
+
   try {
-    // Never cancel in-flight speech — long messages must finish
-    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-      return;
-    }
+    state.speaking = true;
+
+    const done = () => {
+      state.speaking = false;
+      resumeAudio();
+    };
+
+    // Safety: onend is unreliable on some iOS versions
+    window.setTimeout(() => {
+      if (state.speaking) done();
+    }, 14000);
 
     const utterance = new SpeechSynthesisUtterance(message);
+    utterance.onend = done;
+    utterance.onerror = done;
 
-    // Smart voice selection for best cross-platform compatibility
     const preferredVoice = getBestVoice();
     if (preferredVoice) {
       utterance.voice = preferredVoice;
@@ -311,7 +336,7 @@ function speakAlert() {
     utterance.pitch = 1.02;
     window.speechSynthesis.speak(utterance);
   } catch {
-    // Silently fail if speech synthesis fails
+    state.speaking = false;
   }
 }
 
@@ -369,14 +394,26 @@ function fireAlert() {
 
 function maybeAlert(volume) {
   const loud = volume >= state.threshold;
+  const now = Date.now();
 
-  // Rising edge only: alert once when noise crosses the threshold
   if (loud && !state.isLoud) {
     state.isLoud = true;
     setStatus(AppStatus.LOUD, 'Too loud');
     pulseHaptic();
+    state.lastAlertAt = now;
     fireAlert();
-  } else if (!loud && state.isLoud) {
+    return;
+  }
+
+  if (loud && state.isLoud && !state.speaking && now - state.lastAlertAt > 2800) {
+    // Still over threshold (or a later spike): re-alert after the line is free
+    pulseHaptic();
+    state.lastAlertAt = now;
+    fireAlert();
+    return;
+  }
+
+  if (!loud && state.isLoud) {
     state.isLoud = false;
     setStatus(AppStatus.LISTENING, 'Monitoring');
   }
@@ -385,24 +422,33 @@ function maybeAlert(volume) {
 function analyze() {
   if (!state.analyser) return;
 
-  if (!state.buffer || state.buffer.length !== state.analyser.fftSize) {
-    state.buffer = new Float32Array(state.analyser.fftSize);
+  try {
+    resumeAudio();
+
+    if (!state.buffer || state.buffer.length !== state.analyser.fftSize) {
+      state.buffer = new Float32Array(state.analyser.fftSize);
+    }
+
+    state.analyser.getFloatTimeDomainData(state.buffer);
+
+    let sum = 0;
+    for (let i = 0; i < state.buffer.length; i += 1) {
+      sum += state.buffer[i] * state.buffer[i];
+    }
+
+    const rms = Math.sqrt(sum / state.buffer.length);
+    const nextVolume = Math.min(100, (rms / 0.16) * 100);
+    state.volume = state.volume * 0.72 + nextVolume * 0.28;
+
+    updateVolume(state.volume);
+    maybeAlert(state.volume);
+  } catch {
+    // Keep the monitor loop alive even if a frame fails (iOS interruptions)
+  } finally {
+    if (state.analyser) {
+      state.frame = requestAnimationFrame(analyze);
+    }
   }
-
-  state.analyser.getFloatTimeDomainData(state.buffer);
-
-  let sum = 0;
-  for (let i = 0; i < state.buffer.length; i += 1) {
-    sum += state.buffer[i] * state.buffer[i];
-  }
-
-  const rms = Math.sqrt(sum / state.buffer.length);
-  const nextVolume = Math.min(100, (rms / 0.16) * 100);
-  state.volume = state.volume * 0.72 + nextVolume * 0.28;
-
-  updateVolume(state.volume);
-  maybeAlert(state.volume);
-  state.frame = requestAnimationFrame(analyze);
 }
 
 function stopMonitoring() {
@@ -421,6 +467,7 @@ function stopMonitoring() {
   state.buffer = null;
   state.volume = 0;
   state.isLoud = false;
+  state.speaking = false;
   updateVolume(0);
 
   // Clear the waveform chart
@@ -458,6 +505,9 @@ async function startMonitoring() {
   try {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     state.audioContext = new AudioContextClass();
+    state.audioContext.onstatechange = () => {
+      resumeAudio();
+    };
     await state.audioContext.resume();
 
     state.stream = await navigator.mediaDevices.getUserMedia({
@@ -495,8 +545,15 @@ function handleVisibilityChange() {
 
   if (document.hidden) {
     state.audioContext.suspend().catch(() => {});
-  } else if (state.status === AppStatus.LISTENING || state.status === AppStatus.LOUD) {
+    return;
+  }
+
+  if (state.status === AppStatus.LISTENING || state.status === AppStatus.LOUD) {
     state.audioContext.resume().catch(() => {});
+    // rAF is frozen while hidden — restart the monitor loop
+    if (state.analyser && !state.frame) {
+      state.frame = requestAnimationFrame(analyze);
+    }
   }
 }
 
