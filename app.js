@@ -84,26 +84,63 @@ function updateThreshold() {
   }
 }
 
-function initChart() {
+function resizeChart({ preserveHistory = true } = {}) {
   if (!els.waveformChart) return;
-  
+
   const rect = els.waveformChart.getBoundingClientRect();
-  state.chartWidth = rect.width || 300;
-  state.chartHeight = rect.height || 80;
-  
-  // Set canvas size for high DPI displays
+  const nextWidth = rect.width || 300;
+  const nextHeight = rect.height || 80;
   const dpr = window.devicePixelRatio || 1;
-  els.waveformChart.width = state.chartWidth * dpr;
-  els.waveformChart.height = state.chartHeight * dpr;
-  els.waveformChart.style.width = `${state.chartWidth}px`;
-  els.waveformChart.style.height = `${state.chartHeight}px`;
-  
+
+  if (
+    state.chartCtx
+    && state.chartWidth === nextWidth
+    && state.chartHeight === nextHeight
+    && els.waveformChart.width === Math.floor(nextWidth * dpr)
+  ) {
+    return;
+  }
+
+  const previous = preserveHistory && state.waveformHistory.length
+    ? state.waveformHistory.slice()
+    : [];
+
+  state.chartWidth = nextWidth;
+  state.chartHeight = nextHeight;
+  els.waveformChart.width = nextWidth * dpr;
+  els.waveformChart.height = nextHeight * dpr;
+  els.waveformChart.style.width = `${nextWidth}px`;
+  els.waveformChart.style.height = `${nextHeight}px`;
+
   state.chartCtx = els.waveformChart.getContext('2d');
-  state.chartCtx.scale(dpr, dpr);
-  
-  // Initialize history array
-  const maxPoints = Math.floor(state.chartWidth / 2);
-  state.waveformHistory = new Array(maxPoints).fill(0);
+  state.chartCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // Keep recent samples when the canvas size changes (rotate, split view)
+  const maxPoints = Math.max(2, Math.floor(nextWidth / 2));
+  if (previous.length === 0) {
+    state.waveformHistory = new Array(maxPoints).fill(0);
+  } else if (previous.length > maxPoints) {
+    state.waveformHistory = previous.slice(-maxPoints);
+  } else {
+    state.waveformHistory = new Array(maxPoints - previous.length).fill(0).concat(previous);
+  }
+
+  if (preserveHistory) {
+    drawWaveform();
+  }
+}
+
+function initChart() {
+  resizeChart({ preserveHistory: false });
+}
+
+let chartResizeTimer = 0;
+
+function handleChartResize() {
+  window.clearTimeout(chartResizeTimer);
+  chartResizeTimer = window.setTimeout(() => {
+    resizeChart({ preserveHistory: true });
+  }, 100);
 }
 
 function drawWaveform() {
@@ -567,6 +604,11 @@ els.startButton.addEventListener('click', () => {
 });
 
 document.addEventListener('visibilitychange', handleVisibilityChange);
+window.addEventListener('resize', handleChartResize);
+window.addEventListener('orientationchange', handleChartResize);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', handleChartResize);
+}
 
 if ('speechSynthesis' in window) {
   loadVoices();
@@ -577,5 +619,6 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 
+initChart();
 updateThreshold();
 updateVolume(0);
